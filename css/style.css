@@ -395,8 +395,8 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #alert-center{top:52px;font-size:11px;letter-spacing:2px;padding:4px 12px}
   #alert-center .alert-icon{margin-right:5px}
 
-  /* mission card — bottom-left, collapsible */
-  #mission-card{width:auto;min-width:120px;max-width:200px;bottom:calc(44px + env(safe-area-inset-bottom));top:auto;right:auto;left:10px;font-size:10px;padding:6px 10px;cursor:pointer;transition:max-height .2s ease;max-height:120px;overflow:hidden}
+  /* mission card — next to minimap, collapsible */
+  #mission-card{width:auto;min-width:120px;max-width:180px;top:6px;left:92px;right:auto;bottom:auto;font-size:10px;padding:6px 10px;cursor:pointer;transition:max-height .2s ease;max-height:120px;overflow:hidden}
   #mission-card.collapsed{max-height:22px}
   #mission-card.collapsed #mission-desc,#mission-card.collapsed #mission-prog-wrap{display:none}
   #mission-card.collapsed::after{content:' ▾';font-size:9px;opacity:.5;margin-left:4px}
@@ -404,10 +404,12 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #mission-title{font-size:11px;font-weight:700}
   #mission-desc{font-size:9px;margin-top:2px;line-height:1.3}
 
-  /* hotbar — bottom-center */
-  #hotbar{bottom:6px;gap:3px}
-  .hb-slot{width:32px;height:32px}
-  .hb-slot img{width:26px;height:26px;inset:3px}
+  /* hotbar — bottom-center, tighter */
+  #hotbar{bottom:4px;gap:2px}
+  .hb-slot{width:28px;height:28px}
+  .hb-slot img{width:22px;height:22px;inset:2px}
+  .hb-slot .cnt{font-size:8px}
+  .hb-slot .key{font-size:6px}
 
   /* right-side action buttons — bottom-right */
   .ta-lg{width:58px;height:58px;font-size:14px}
