@@ -285,8 +285,12 @@ class HUD {
     document.getElementById('stats-right').classList.toggle('hidden', on);
     const fly = document.getElementById('touch-fly');
     const arc = document.getElementById('touch-arc');
+    const joyBase = document.getElementById('joy-base');
+    const joyZone = document.getElementById('joy-zone');
     if (fly) fly.style.display = on ? 'flex' : 'none';
     if (arc) arc.style.display = on ? 'none' : 'flex';
+    if (joyBase) joyBase.style.display = on ? 'none' : '';
+    if (joyZone) joyZone.style.display = on ? 'none' : '';
   }
 
   closeShipPanel() { this.g.ship.closePanel(); }

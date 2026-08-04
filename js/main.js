@@ -12,6 +12,8 @@ const Input = {
     if (this.isTouch) return;
     this.isTouch = true;
     this.initTouch(game);
+    // Try to enter fullscreen on first touch (user gesture) to hide browser UI
+    game.toggleFullscreen();
     // Exit pointer lock if active, and stop listening for it
     if (document.pointerLockElement) document.exitPointerLock();
     this._onPLChange && document.removeEventListener('pointerlockchange', this._onPLChange);
@@ -59,21 +61,30 @@ const Input = {
     const joyKnob = document.getElementById('joy-knob');
     const lookZone = document.getElementById('look-zone');
     const joyZone = document.getElementById('joy-zone');
-    const joyR = 55;
+    // Visible viewport size (excludes mobile browser UI)
+    const vw = () => ((window.visualViewport && window.visualViewport.width) || innerWidth);
+    const vh = () => ((window.visualViewport && window.visualViewport.height) || innerHeight);
+    // Joystick radius follows the actual base size (defaults to 110/2)
+    const joyR = () => Math.max(40, (joyBase ? joyBase.offsetWidth : 110) / 2 - 6);
+    const joyCenter = () => {
+      const r = joyBase.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    };
 
     const onStart = (e) => {
       e.preventDefault();
+      const splitX = vw() * 0.45;
       for (const t of e.changedTouches) {
-        const halfW = innerWidth / 2;
-        if (t.clientX < halfW && this.joyId === null) {
+        if (t.clientX < splitX && this.joyId === null) {
           this.joyId = t.identifier;
-          this.joyStartX = t.clientX;
-          this.joyStartY = t.clientY;
+          const c = joyCenter();
+          this.joyStartX = c.x;
+          this.joyStartY = c.y;
           this.joyDX = 0; this.joyDY = 0;
           this.joyActive = true;
-          if (joyBase) { joyBase.style.left = (t.clientX - 55) + 'px'; joyBase.style.top = (t.clientY - 55) + 'px'; joyBase.style.display = 'block'; }
+          if (joyBase) joyBase.classList.add('active');
           if (joyKnob) joyKnob.style.transform = 'translate(0,0)';
-        } else if (t.clientX >= halfW && this.lookId === null) {
+        } else if (t.clientX >= splitX && this.lookId === null) {
           this.lookId = t.identifier;
           this.lookLastX = t.clientX;
           this.lookLastY = t.clientY;
@@ -82,14 +93,15 @@ const Input = {
     };
     const onMove = (e) => {
       e.preventDefault();
+      const r = joyR();
       for (const t of e.changedTouches) {
         if (t.identifier === this.joyId) {
           let dx = t.clientX - this.joyStartX;
           let dy = t.clientY - this.joyStartY;
           const d = Math.hypot(dx, dy);
-          if (d > joyR) { dx = dx / d * joyR; dy = dy / d * joyR; }
-          this.joyDX = dx / joyR;
-          this.joyDY = dy / joyR;
+          if (d > r) { dx = dx / d * r; dy = dy / d * r; }
+          this.joyDX = dx / r;
+          this.joyDY = dy / r;
           if (joyKnob) joyKnob.style.transform = `translate(${dx}px,${dy}px)`;
         }
         if (t.identifier === this.lookId) {
@@ -109,7 +121,8 @@ const Input = {
         if (t.identifier === this.joyId) {
           this.joyId = null; this.joyActive = false;
           this.joyDX = 0; this.joyDY = 0;
-          if (joyBase) joyBase.style.display = 'none';
+          if (joyBase) joyBase.classList.remove('active');
+          if (joyKnob) joyKnob.style.transform = 'translate(0,0)';
         }
         if (t.identifier === this.lookId) this.lookId = null;
       }
@@ -170,11 +183,17 @@ class Game {
     this.camera = new THREE.PerspectiveCamera(this.settings.fov, innerWidth / innerHeight, 0.08, 1600);
     this.scene.add(this.camera);
     this.atlas = new TextureAtlas();
-    addEventListener('resize', () => {
-      this.renderer.setSize(innerWidth, innerHeight);
-      this.camera.aspect = innerWidth / innerHeight;
+    this._resize = () => {
+      // Use visualViewport so the game fills the visible area (mobile browser UI excluded)
+      const w = (window.visualViewport && window.visualViewport.width) || innerWidth;
+      const h = (window.visualViewport && window.visualViewport.height) || innerHeight;
+      this.renderer.setSize(w, h);
+      this.camera.aspect = w / h;
       this.camera.updateProjectionMatrix();
-    });
+    };
+    addEventListener('resize', this._resize);
+    addEventListener('orientationchange', this._resize);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', this._resize);
     this.clock = new THREE.Clock();
   }
 
@@ -316,6 +335,18 @@ class Game {
     if (this.state === 'play' && !this.uiOpen()) document.getElementById('game-canvas').requestPointerLock();
   }
   exitPointerLock() { if (!this.isTouch && document.pointerLockElement) document.exitPointerLock(); }
+
+  toggleFullscreen() {
+    const el = document.documentElement;
+    const full = document.fullscreenElement || document.webkitFullscreenElement;
+    if (!full) {
+      const req = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (req) { const r = req.call(el); if (r && r.catch) r.catch(() => {}); }
+    } else {
+      const ex = document.exitFullscreen || document.webkitExitFullscreen;
+      if (ex) ex.call(document);
+    }
+  }
 
   newGame() {
     this.audio.ensure();
@@ -511,9 +542,9 @@ class Game {
     // 顶部工具条
     const top = document.getElementById('touch-top');
     if (top.children.length) return;
-    const tu = (label, action) => {
+    const tu = (label, action, extra) => {
       const b = document.createElement('div');
-      b.className = 'tu-btn';
+      b.className = 'tu-btn' + (extra ? ' ' + extra : '');
       b.textContent = label;
       const down = (e) => { e.preventDefault(); e.stopPropagation(); this.doTouchAction(action, true); };
       const up = (e) => { e.preventDefault(); e.stopPropagation(); this.doTouchAction(action, false); };
@@ -522,6 +553,7 @@ class Game {
       b.addEventListener('touchcancel', up, { passive: false });
       top.appendChild(b);
     };
+    tu('⛶', 'fullscreen', 'fullscreen');
     tu('📡', 'scan');
     tu('🔍', 'visor');
     tu('🎒', 'inv');
@@ -576,7 +608,8 @@ class Game {
 
   doTouchAction(action, down) {
     const p = this.player;
-    if (action === 'jump') { this.input.keys['Space'] = down; }
+    if (action === 'fullscreen') { if (down) this.toggleFullscreen(); }
+    else if (action === 'jump') { this.input.keys['Space'] = down; }
     else if (action === 'sprint') { if (down) { this.input.keys['ShiftLeft'] = !this.input.keys['ShiftLeft']; } }
     else if (action === 'mine') { if (down && !p.inShip && !this.uiOpen()) { this.input.buttons[0] = true; } else this.input.buttons[0] = false; }
     else if (action === 'place') { if (down && !p.inShip && !this.uiOpen()) p.placeBlock(); }
