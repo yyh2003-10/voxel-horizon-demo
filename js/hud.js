@@ -31,6 +31,13 @@ class HUD {
       minimapWrap.addEventListener('click', () => this.showExpandedMap());
       minimapWrap.addEventListener('touchend', (e) => { e.preventDefault(); this.showExpandedMap(); });
     }
+    // 任务卡点击折叠/展开（移动端默认折叠）
+    const missionCard = document.getElementById('mission-card');
+    if (missionCard) {
+      const isMobile = matchMedia('(max-width:768px)').matches || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      if (isMobile) missionCard.classList.add('collapsed');
+      missionCard.addEventListener('click', () => missionCard.classList.toggle('collapsed'));
+    }
     // 全屏地图点击传送
     const minimapBig = this.minimapBigCanvas;
     if (minimapBig) {

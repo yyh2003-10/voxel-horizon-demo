@@ -107,8 +107,8 @@ body{font-family:var(--fb);color:var(--ink);font-size:16px}
 
 /* ---------- hotbar ---------- */
 #hotbar{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:6px;pointer-events:none}
-.hb-slot{position:relative;width:56px;height:56px;background:rgba(8,14,22,.72);border:1px solid var(--line2);backdrop-filter:blur(6px);clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px);transition:transform .1s,border-color .1s}
-.hb-slot img{position:absolute;inset:6px;width:44px;height:44px;image-rendering:pixelated}
+.hb-slot{position:relative;width:34px;height:34px;background:rgba(8,14,22,.72);border:1px solid var(--line2);backdrop-filter:blur(6px);clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px);transition:transform .1s,border-color .1s}
+.hb-slot img{position:absolute;inset:3px;width:28px;height:28px;image-rendering:pixelated}
 .hb-slot .cnt{position:absolute;right:4px;bottom:2px;font-family:var(--fh);font-size:11px;color:#fff;text-shadow:0 1px 2px #000}
 .hb-slot .key{position:absolute;left:4px;top:2px;font-size:9px;opacity:.5;font-family:var(--fh)}
 .hb-slot.sel{border-color:#fff;box-shadow:0 0 14px rgba(255,255,255,.35),inset 0 0 12px rgba(255,255,255,.12);transform:translateY(-4px)}
@@ -347,57 +347,101 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
 /* ===== touch / mobile ===== */
 #touch-layer{position:absolute;inset:0;z-index:50;pointer-events:none}
 #touch-layer:not(.hidden){display:block}
-#look-zone{position:absolute;right:0;top:0;width:55%;height:calc(100dvh - 64px);pointer-events:auto;touch-action:none}
-#joy-zone{position:absolute;left:0;top:0;width:45%;height:calc(100dvh - 64px);pointer-events:auto;touch-action:none}
+#look-zone{position:absolute;right:0;top:0;width:55%;height:calc(100vh - 64px);height:calc(100dvh - 64px);pointer-events:auto;touch-action:none}
+#joy-zone{position:absolute;left:0;top:0;width:45%;height:calc(100vh - 64px);height:calc(100dvh - 64px);pointer-events:auto;touch-action:none}
 #joy-base{position:absolute;left:calc(24px + env(safe-area-inset-left));bottom:calc(96px + env(safe-area-inset-bottom));top:auto;width:var(--joy-size);height:var(--joy-size);border-radius:50%;border:2px solid rgba(255,255,255,.22);background:rgba(10,20,30,.35);pointer-events:none;z-index:51;backdrop-filter:blur(4px);transition:background .1s,border-color .1s}
 #joy-base.active{background:rgba(10,20,30,.6);border-color:rgba(255,255,255,.42);box-shadow:0 0 18px rgba(120,220,240,.25)}
 #joy-knob{position:absolute;left:50%;top:50%;width:calc(var(--joy-size)*0.42);height:calc(var(--joy-size)*0.42);margin-left:calc(var(--joy-size)*-0.21);margin-top:calc(var(--joy-size)*-0.21);border-radius:50%;background:rgba(255,255,255,.28);border:2px solid rgba(255,255,255,.45);box-shadow:0 0 14px rgba(120,220,240,.35);transition:transform .04s}
 /* top-right utility strip */
-#touch-top{position:absolute;top:6px;right:6px;display:flex;gap:7px;pointer-events:auto;z-index:52}
+#touch-top{position:absolute;top:6px;right:6px;display:flex;gap:10px;pointer-events:auto;z-index:52}
 .tu-btn{display:flex;align-items:center;justify-content:center;width:clamp(34px,9vmin,44px);height:clamp(34px,9vmin,44px);border-radius:50%;background:rgba(10,20,30,.55);border:1.5px solid rgba(255,255,255,.22);font-size:12px;font-weight:600;color:var(--ink);touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(6px);transition:background .08s,transform .08s}
 .tu-btn:active{background:rgba(102,217,232,.5);transform:scale(.9)}
 .tu-btn.fullscreen{font-size:14px;border-color:rgba(255,209,102,.45)}
-/* right-side action arc */
-#touch-arc{position:absolute;right:calc(10px + env(safe-area-inset-right));bottom:calc(100px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:flex-end;gap:clamp(8px,2vmin,12px);pointer-events:auto;z-index:52}
+/* right-side action arc — spread horizontally for thumb reach */
+#touch-arc{position:absolute;right:calc(10px + env(safe-area-inset-right));bottom:calc(100px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:auto;z-index:52}
+#touch-arc .ta-row{flex-direction:row-reverse;gap:6px}
 .ta-btn{display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(10,20,30,.55);border:1.5px solid rgba(255,255,255,.28);font-weight:600;color:var(--ink);touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(6px);transition:background .08s,transform .08s}
 .ta-btn:active{background:rgba(255,138,92,.55);transform:scale(.88);border-color:var(--acc)}
 .ta-lg{width:clamp(62px,16vmin,78px);height:clamp(62px,16vmin,78px);font-size:15px}
 .ta-sm{width:clamp(48px,12vmin,60px);height:clamp(48px,12vmin,60px);font-size:12px}
-.ta-row{display:flex;gap:clamp(8px,2vmin,12px)}
+.ta-row{display:flex;flex-direction:row-reverse;gap:6px;justify-content:flex-end}
 /* flight touch */
 #touch-fly{position:absolute;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);display:none;gap:12px;pointer-events:auto;z-index:52}
 .tf-btn{display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:12px;background:rgba(10,20,30,.6);border:1.5px solid rgba(120,220,240,.35);font-size:12px;font-weight:600;color:var(--ink);backdrop-filter:blur(6px);touch-action:none;transition:background .08s,transform .08s}
 .tf-btn:active{background:rgba(102,217,232,.5);transform:scale(.9)}
-/* touch hotbar sizing */
-@media (pointer:coarse){
+/* ===== Mobile layout (max-width:768px) — reliable on all devices ===== */
+@media (max-width:768px){
+  /* hide non-essential HUD */
   #flight-tips{display:none}
   #interact-hint .kbd{display:none}
-  #hotbar{bottom:8px;pointer-events:auto}
-  .hb-slot{width:46px;height:46px;pointer-events:auto;cursor:pointer}
-  .hb-slot img{width:36px;height:36px;inset:5px}
   #stats-left,#stats-right{display:none}
   #compass-wrap{max-width:50vw;overflow:hidden}
-  #mission-card{width:200px;bottom:12px;right:auto;left:12px;font-size:12px}
-  #notify-stack{bottom:auto;top:60px;right:8px;max-width:50vw}
-  #toasts{bottom:68px}
-  .bar{width:120px}
-  #visor-info{min-width:160px;font-size:12px;left:calc(50% + 40px)}
-  #visor-side{font-size:10px;left:6vw}
-  .visor-corner{width:40px;height:40px}
-  #minimap-wrap{top:6px;left:6px}
-  #minimap{width:90px;height:90px}
-}
-@media (max-width:600px){
-  .hb-slot{width:40px;height:40px}
-  .hb-slot img{width:32px;height:32px}
-  .tu-btn{width:32px;height:32px;font-size:10px}
+
+  /* top utility buttons — centered, away from planet info */
+  #touch-top{left:50%;right:auto;transform:translateX(-30%);top:6px;gap:8px}
+  .tu-btn{width:34px;height:34px;font-size:11px}
+
+  /* planet info — below utility buttons, smaller */
+  #hud-corner{top:72px;right:10px}
+  #hud-units{font-size:14px}
+  #hud-planet{font-size:9px;letter-spacing:2px}
+  #hud-env{font-size:9px}
+
+  /* alert banner — compact */
+  #alert-center{top:56px;font-size:12px;letter-spacing:2px;padding:5px 14px}
+  #alert-center .alert-icon{margin-right:5px}
+
+  /* mission card — above hotbar, collapsible */
+  #mission-card{width:auto;min-width:120px;max-width:200px;bottom:calc(44px + env(safe-area-inset-bottom));top:auto;right:auto;left:10px;font-size:10px;padding:6px 10px;cursor:pointer;transition:max-height .2s ease;max-height:120px;overflow:hidden}
+  #mission-card.collapsed{max-height:22px}
+  #mission-card.collapsed #mission-desc,#mission-card.collapsed #mission-prog-wrap{display:none}
+  #mission-card.collapsed::after{content:' ▾';font-size:9px;opacity:.5;margin-left:4px}
+  #mission-kind{font-size:8px;letter-spacing:2px}
+  #mission-title{font-size:11px;font-weight:700}
+  #mission-desc{font-size:9px;margin-top:2px;line-height:1.3}
+
+  /* hotbar — smaller */
+  #hotbar{bottom:6px;pointer-events:auto;gap:4px}
+  .hb-slot{width:30px;height:30px;pointer-events:auto;cursor:pointer}
+  .hb-slot img{width:24px;height:24px;inset:3px}
+
+  /* right-side action buttons */
   .ta-lg{width:58px;height:58px;font-size:14px}
   .ta-sm{width:44px;height:44px;font-size:11px}
   .tf-btn{width:48px;height:48px;font-size:11px}
-  #mission-card{width:170px}
-  #hotbar{gap:3px}
-  #minimap{width:70px;height:70px}
+
+  /* notifications */
+  #notify-stack{bottom:auto;top:52px;right:8px;max-width:55vw}
+  .notice{font-size:12px;padding:6px 12px 6px 14px;max-width:55vw}
+  #toasts{bottom:60px}
+  .toast{font-size:12px;padding:3px 10px}
+
+  /* interact hint */
+  #interact-hint{top:calc(50% + 20px);font-size:12px;padding:5px 12px}
+
+  /* visor */
+  #visor-info{min-width:160px;font-size:12px;left:calc(50% + 40px)}
+  #visor-side{font-size:10px;left:6vw}
+  .visor-corner{width:40px;height:40px}
+
+  /* minimap */
+  #minimap-wrap{top:6px;left:6px}
+  #minimap{width:80px;height:80px}
+}
+@media (max-width:600px){
+  /* extra-small phones: tighter spacing */
+  .tu-btn{width:30px;height:30px;font-size:10px}
+  #touch-top{gap:5px}
+  .ta-lg{width:54px;height:54px;font-size:13px}
+  .ta-sm{width:40px;height:40px;font-size:10px}
+  .hb-slot{width:28px;height:28px}
+  .hb-slot img{width:22px;height:22px}
+  #mission-card{min-width:110px;padding:4px 8px}
+  #alert-center{font-size:11px;padding:4px 10px}
+  #minimap{width:64px;height:64px}
+  #minimap{width:64px;height:64px}
   #minimap-label{font-size:8px}
+  #joy-base{--joy-size:100px}
 }
 /* tablet landscape — larger touch targets, wider panels */
 @media (min-width:768px) and (max-width:1024px) and (orientation:landscape){
@@ -458,7 +502,7 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #minimap-big{max-width:90vw;max-height:70dvh}
   #visor-info{left:50%;top:auto;bottom:92px;transform:translateX(-50%);width:min(86vw,300px);min-width:0}
   #visor-side{display:none}
-  #alert-center{top:70px;width:92vw;padding:8px 12px;text-align:center}
+  #alert-center{top:56px;width:88vw;padding:5px 12px;text-align:center;font-size:12px}
   #milestone-pop .ms-line{width:80vw}
   #milestone-pop .ms-title{font-size:30px}
   #touch-top{top:calc(6px + env(safe-area-inset-top))}

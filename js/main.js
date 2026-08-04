@@ -512,6 +512,11 @@ class Game {
     this.state = 'play';
     this.showScreen('hud');
     document.getElementById('hud').classList.remove('hidden');
+    // Safety net: if device is touch-capable but first touch event was missed
+    // (e.g. dvh unsupported, browser UI consumed it), force-touch now
+    if (!this.isTouch && Input._hasTouchCapability()) {
+      Input._activateTouchMode(this);
+    }
     if (this.isTouch) {
       document.getElementById('touch-layer').classList.remove('hidden');
       this.buildTouchButtons();
@@ -561,9 +566,9 @@ class Game {
     tu('💊', 'replenish_ls');
     tu('⚡', 'replenish_haz');
 
-    // 右侧弧形动作键 — 按拇指自然弧线排列，大的在下方（拇指最舒适区）
+    // 右侧动作键 — 双列布局，大键在右下拇指舒适区
     const arc = document.getElementById('touch-arc');
-    const ta = (label, action, size, row) => {
+    const makeBtn = (label, action, size) => {
       const b = document.createElement('div');
       b.className = 'ta-btn ' + size;
       b.textContent = label;
@@ -572,19 +577,20 @@ class Game {
       b.addEventListener('touchstart', down, { passive: false });
       b.addEventListener('touchend', up, { passive: false });
       b.addEventListener('touchcancel', up, { passive: false });
-      if (row) { const r = document.createElement('div'); r.className = 'ta-row'; r.appendChild(b); arc.appendChild(r); }
-      else arc.appendChild(b);
+      return b;
     };
-    // 上排：跳跃 + 冲刺（小键）
-    ta('跳', 'jump', 'ta-sm', true);
-    // 中排：冲刺 + 交互（小键）
-    ta('冲', 'sprint', 'ta-sm', true);
-    // 中间：放置（小键）
-    ta('放', 'place', 'ta-sm');
-    // 中间：交互 E（小键）
-    ta('E', 'interact', 'ta-sm');
-    // 下方大键：采集/攻击（拇指最舒适区）
-    ta('挖', 'mine', 'ta-lg');
+    // 第一行：冲刺 + 跳跃（水平排列）
+    const row1 = document.createElement('div'); row1.className = 'ta-row';
+    row1.appendChild(makeBtn('冲', 'sprint', 'ta-sm'));
+    row1.appendChild(makeBtn('跳', 'jump', 'ta-sm'));
+    arc.appendChild(row1);
+    // 第二行：放置 + 交互（水平排列）
+    const row2 = document.createElement('div'); row2.className = 'ta-row';
+    row2.appendChild(makeBtn('放', 'place', 'ta-sm'));
+    row2.appendChild(makeBtn('E', 'interact', 'ta-sm'));
+    arc.appendChild(row2);
+    // 底部大键：采集/攻击（拇指最舒适区）
+    arc.appendChild(makeBtn('挖', 'mine', 'ta-lg'));
 
     // 飞行触屏按钮（默认隐藏，飞行时显示）
     const fly = document.getElementById('touch-fly');
