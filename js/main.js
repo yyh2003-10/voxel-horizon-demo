@@ -331,10 +331,10 @@ class Game {
   }
 
   requestPointerLock() {
-    if (this.isTouch) return;
+    if (this.input.isTouch) return;
     if (this.state === 'play' && !this.uiOpen()) document.getElementById('game-canvas').requestPointerLock();
   }
-  exitPointerLock() { if (!this.isTouch && document.pointerLockElement) document.exitPointerLock(); }
+  exitPointerLock() { if (!this.input.isTouch && document.pointerLockElement) document.exitPointerLock(); }
 
   toggleFullscreen() {
     const el = document.documentElement;
@@ -514,10 +514,10 @@ class Game {
     document.getElementById('hud').classList.remove('hidden');
     // Safety net: if device is touch-capable but first touch event was missed
     // (e.g. dvh unsupported, browser UI consumed it), force-touch now
-    if (!this.isTouch && Input._hasTouchCapability()) {
+    if (!this.input.isTouch && Input._hasTouchCapability()) {
       Input._activateTouchMode(this);
     }
-    if (this.isTouch) {
+    if (this.input.isTouch) {
       document.getElementById('touch-layer').classList.remove('hidden');
       this.buildTouchButtons();
     }
@@ -533,7 +533,7 @@ class Game {
   }
 
   _addPointerLockListener() {
-    if (!this.isTouch) {
+    if (!this.input.isTouch) {
       this._onPLChange = () => {
         if (!document.pointerLockElement && this.state === 'play' && !this.uiOpen()) {
           this.togglePause(true);
@@ -708,7 +708,7 @@ class Game {
 
   onMouseDown(e) {
     if (this.state !== 'play' || this.uiOpen()) return;
-    if (this.isTouch) return;
+    if (this.input.isTouch) return;
     if (!document.pointerLockElement) {
       this.requestPointerLock();
       return;
@@ -841,7 +841,7 @@ class Game {
     if (this.state === 'play' || this.state === 'warp' || this.state === 'dead' || this.state === 'pause') {
       if (this.state === 'play') {
         this.playTime += dt;
-        if (this.isTouch) this.input.updateJoyKeys();
+        if (this.input.isTouch) this.input.updateJoyKeys();
 
         // 睡觉快速过夜
         if (this.player.sleeping) {
