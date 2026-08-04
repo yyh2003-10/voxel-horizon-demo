@@ -32,6 +32,7 @@ class Player {
     this.armorDef = 0;     // 当前减伤比例
     this.sleeping = false; // 是否正在睡觉
     this.sleepTimer = 0;   // 睡觉倒计时
+    this.aimDir = new THREE.Vector3(0, 0, -1); // 当前实际瞄准方向（受采集摇杆影响）
     this.buildViewmodel();
     this.highlight = new THREE.LineSegments(
       new THREE.EdgesGeometry(new THREE.BoxGeometry(1.002, 1.002, 1.002)),
@@ -90,6 +91,31 @@ class Player {
       Math.sin(this.pitch),
       -Math.cos(this.yaw) * Math.cos(this.pitch)
     );
+  }
+
+  updateAim() {
+    const g = this.g;
+    const crosshair = document.getElementById('crosshair');
+    if (!g.input.isTouch || !g.input.mineActive) {
+      this.aimDir.copy(this.lookDir());
+      if (crosshair) crosshair.style.transform = 'translate(-50%, -50%)';
+      return;
+    }
+    const maxOff = Math.min(80, window.innerWidth * 0.12);
+    const offX = g.input.mineDX * maxOff;
+    const offY = g.input.mineDY * maxOff;
+    if (crosshair) {
+      crosshair.style.transform = `translate(calc(-50% + ${offX}px), calc(-50% + ${offY}px))`;
+    }
+    const cx = window.innerWidth / 2 + offX;
+    const cy = window.innerHeight / 2 + offY;
+    const vec = new THREE.Vector3(
+      (cx / window.innerWidth) * 2 - 1,
+      -(cy / window.innerHeight) * 2 + 1,
+      0.5
+    );
+    vec.unproject(g.camera);
+    this.aimDir.copy(vec.sub(g.camera.position).normalize());
   }
 
   update(dt) {
@@ -194,6 +220,7 @@ class Player {
       this.blockInHand.material.color.set(this.blockColor(ITEMS[selItem.id].place));
     }
 
+    this.updateAim();
     this.updateTargeting(dt);
     this.updateMining(dt);
     this.updateInteract(dt);
@@ -268,7 +295,7 @@ class Player {
 
   updateTargeting() {
     const g = this.g;
-    const hit = g.world.raycast(this.eyePos(), this.lookDir(), CFG.REACH);
+    const hit = g.world.raycast(this.eyePos(), this.aimDir, CFG.REACH);
     this.target = hit;
     if (hit && !this.visor) {
       this.highlight.visible = true;
@@ -314,8 +341,8 @@ class Player {
       return;
     }
     const wantMine = input.buttons[0] && !this.visor && !g.uiOpen();
-    const cHit = wantMine ? g.fauna.raycastCreature(this.eyePos(), this.lookDir(), CFG.REACH + 2) : null;
-    const mHit = wantMine ? g.fauna.raycastMonster(this.eyePos(), this.lookDir(), CFG.REACH + 2) : null;
+    const cHit = wantMine ? g.fauna.raycastCreature(this.eyePos(), this.aimDir, CFG.REACH + 2) : null;
+    const mHit = wantMine ? g.fauna.raycastMonster(this.eyePos(), this.aimDir, CFG.REACH + 2) : null;
     // 优先攻击距离更近的目标（怪物或生物）
     const bestMob = (!cHit && !mHit) ? null : (!cHit ? mHit : (!mHit ? cHit : (mHit.dist < cHit.dist ? mHit : cHit)));
     const isMonster = bestMob === mHit;

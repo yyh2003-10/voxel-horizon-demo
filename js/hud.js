@@ -38,10 +38,11 @@ class HUD {
       if (isMobile) missionCard.classList.add('collapsed');
       missionCard.addEventListener('click', () => missionCard.classList.toggle('collapsed'));
     }
-    // 全屏地图点击传送
-    const minimapBig = this.minimapBigCanvas;
-    if (minimapBig) {
-      minimapBig.addEventListener('click', (e) => this.onExpandedMapClick(e));
+    // 全屏地图点击传送 / 点空白处关闭
+    const minimapExpanded = document.getElementById('minimap-expanded');
+    if (minimapExpanded) {
+      minimapExpanded.addEventListener('click', (e) => this.onExpandedMapClick(e));
+      minimapExpanded.addEventListener('touchend', (e) => this.onExpandedMapClick(e));
     }
     // 通知收起/展开
     this.initNotifyToggle();
@@ -749,9 +750,23 @@ class HUD {
 
   onExpandedMapClick(e) {
     if (!this.minimapExpanded) return;
+    e.preventDefault();
+    let clientX, clientY;
+    if (e.changedTouches && e.changedTouches.length) {
+      clientX = e.changedTouches[0].clientX;
+      clientY = e.changedTouches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
     const rect = this.minimapBigCanvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+    const inside = clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+    if (!inside) {
+      this.hideExpandedMap();
+      return;
+    }
+    const mx = clientX - rect.left;
+    const my = clientY - rect.top;
     const W = 400, H = 400;
     const range = 200;
     const g = this.g;

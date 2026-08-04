@@ -5,6 +5,7 @@ const Input = {
   isTouch: false,
   joyActive: false, joyId: null, joyStartX: 0, joyStartY: 0, joyDX: 0, joyDY: 0,
   lookId: null, lookLastX: 0, lookLastY: 0,
+  mineActive: false, mineId: null, mineStartX: 0, mineStartY: 0, mineDX: 0, mineDY: 0,
   _hasTouchCapability() {
     return ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   },
@@ -559,6 +560,7 @@ class Game {
       top.appendChild(b);
     };
     tu('⛶', 'fullscreen', 'fullscreen');
+    tu('⏸', 'pause');
     tu('📡', 'scan');
     tu('🔍', 'visor');
     tu('🎒', 'inv');
@@ -589,8 +591,66 @@ class Game {
     row2.appendChild(makeBtn('放', 'place', 'ta-sm'));
     row2.appendChild(makeBtn('E', 'interact', 'ta-sm'));
     arc.appendChild(row2);
-    // 底部大键：采集/攻击（拇指最舒适区）
-    arc.appendChild(makeBtn('挖', 'mine', 'ta-lg'));
+    // 底部：采集摇杆（按住即挖掘，拖动控制瞄准点）
+    const mineBase = document.createElement('div');
+    mineBase.className = 'ta-joy ta-lg';
+    mineBase.id = 'mine-joy-base';
+    const mineKnob = document.createElement('div');
+    mineKnob.className = 'ta-joy-knob';
+    mineBase.appendChild(mineKnob);
+    const mineR = () => Math.max(14, mineBase.offsetWidth / 2 - mineKnob.offsetWidth / 2 - 2);
+    const mineCenter = () => {
+      const r = mineBase.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    };
+    const onMineStart = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      for (const t of e.changedTouches) {
+        if (this.input.mineId === null) {
+          this.input.mineId = t.identifier;
+          const c = mineCenter();
+          this.input.mineStartX = c.x;
+          this.input.mineStartY = c.y;
+          this.input.mineDX = 0; this.input.mineDY = 0;
+          this.input.mineActive = true;
+          this.input.buttons[0] = true;
+          mineBase.classList.add('active');
+          mineKnob.style.transform = 'translate(-50%,-50%)';
+        }
+      }
+    };
+    const onMineMove = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const r = mineR();
+      for (const t of e.changedTouches) {
+        if (t.identifier === this.input.mineId) {
+          let dx = t.clientX - this.input.mineStartX;
+          let dy = t.clientY - this.input.mineStartY;
+          const d = Math.hypot(dx, dy);
+          if (d > r) { dx = dx / d * r; dy = dy / d * r; }
+          this.input.mineDX = dx / r;
+          this.input.mineDY = dy / r;
+          mineKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+        }
+      }
+    };
+    const onMineEnd = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      for (const t of e.changedTouches) {
+        if (t.identifier === this.input.mineId) {
+          this.input.mineId = null; this.input.mineActive = false;
+          this.input.mineDX = 0; this.input.mineDY = 0;
+          this.input.buttons[0] = false;
+          mineBase.classList.remove('active');
+          mineKnob.style.transform = 'translate(-50%,-50%)';
+        }
+      }
+    };
+    mineBase.addEventListener('touchstart', onMineStart, { passive: false });
+    mineBase.addEventListener('touchmove', onMineMove, { passive: false });
+    mineBase.addEventListener('touchend', onMineEnd, { passive: false });
+    mineBase.addEventListener('touchcancel', onMineEnd, { passive: false });
+    arc.appendChild(mineBase);
 
     // 飞行触屏按钮（默认隐藏，飞行时显示）
     const fly = document.getElementById('touch-fly');
@@ -615,6 +675,12 @@ class Game {
   doTouchAction(action, down) {
     const p = this.player;
     if (action === 'fullscreen') { if (down) this.toggleFullscreen(); }
+    else if (action === 'pause') {
+      if (down) {
+        if (this.hud && this.hud.minimapExpanded) this.hud.hideExpandedMap();
+        if (this.state === 'play' || this.state === 'pause') this.togglePause();
+      }
+    }
     else if (action === 'jump') { this.input.keys['Space'] = down; }
     else if (action === 'sprint') { if (down) { this.input.keys['ShiftLeft'] = !this.input.keys['ShiftLeft']; } }
     else if (action === 'mine') { if (down && !p.inShip && !this.uiOpen()) { this.input.buttons[0] = true; } else this.input.buttons[0] = false; }
