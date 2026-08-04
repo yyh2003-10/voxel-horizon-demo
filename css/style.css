@@ -386,7 +386,8 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #flight-tips{display:none}
   #interact-hint .kbd{display:none}
   #stats-left,#stats-right{display:none}
-  #compass-wrap{max-width:44vw;overflow:hidden;margin-top:4px}
+  #compass-wrap{max-width:44vw;overflow:hidden;margin-top:4px;filter:drop-shadow(0 1px 3px rgba(0,0,0,.8))}
+  #joy-zone{top:140px;height:calc(100% - 140px)}
 
   /* minimap — top-left, clickable above touch-layer */
   #minimap-wrap{top:6px;left:6px;z-index:55;pointer-events:auto}
@@ -403,7 +404,7 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #alert-center .alert-icon{margin-right:5px}
 
   /* mission card — next to minimap, collapsible */
-  #mission-card{width:auto;min-width:120px;max-width:180px;top:6px;left:92px;right:auto;bottom:auto;font-size:10px;padding:6px 10px;cursor:pointer;transition:max-height .2s ease;max-height:120px;overflow:hidden}
+  #mission-card{width:auto;min-width:120px;max-width:180px;top:6px;left:92px;right:auto;bottom:auto;font-size:10px;padding:6px 10px;cursor:pointer;pointer-events:auto;transition:max-height .2s ease;max-height:120px;overflow:hidden}
   #mission-card.collapsed{max-height:22px}
   #mission-card.collapsed #mission-desc,#mission-card.collapsed #mission-prog-wrap{display:none}
   #mission-card.collapsed::after{content:' ▾';font-size:9px;opacity:.5;margin-left:4px}
@@ -451,7 +452,7 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #minimap-wrap{top:4px;left:4px;z-index:55;pointer-events:auto}
   #minimap{width:64px;height:64px;border-width:1px;border-radius:6px;pointer-events:none}
   #minimap-label{display:none}
-  #compass-wrap{position:absolute;top:4px;left:74px;right:auto;margin:0;max-width:28vw;height:40px}
+  #compass-wrap{position:absolute;top:4px;left:50%;right:auto;transform:translateX(-50%);margin:0;max-width:46vw;height:44px;filter:drop-shadow(0 1px 3px rgba(0,0,0,.8))}
   #compass-wrap::after{height:8px}
 
   /* hide planet info to save vertical space */
@@ -489,7 +490,7 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
 
   /* bottom-left: joystick */
   #joy-base{--joy-size:120px;left:calc(14px + env(safe-area-inset-left));bottom:calc(20vh + env(safe-area-inset-bottom))}
-  #joy-zone{height:100%}
+  #joy-zone{top:120px;height:calc(100% - 120px)}
   #mission-card{
     top:6px;
     left:92px;
@@ -501,6 +502,7 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
     padding:4px 8px;
     font-size:9px;
     cursor:pointer;
+    pointer-events:auto;
   }
   #mission-card.collapsed{max-height:22px}
   #mission-card.collapsed #mission-desc,#mission-card.collapsed #mission-prog-wrap{display:none}
