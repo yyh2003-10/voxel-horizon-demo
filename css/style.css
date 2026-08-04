@@ -487,21 +487,24 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #notify-toggle{padding:3px 8px;font-size:10px}
   .notice{font-size:10px;padding:4px 10px 4px 12px;max-width:28vw}
 
-  /* bottom-left: joystick + mission card above it */
+  /* bottom-left: joystick */
   #joy-base{--joy-size:120px;left:calc(14px + env(safe-area-inset-left));bottom:calc(20vh + env(safe-area-inset-bottom))}
   #joy-zone{height:100%}
   #mission-card{
-    top:auto;
+    top:6px;
+    left:92px;
     right:auto;
-    bottom:calc(96px + env(safe-area-inset-bottom));
-    left:calc(6px + env(safe-area-inset-left));
+    bottom:auto;
     min-width:90px;
-    max-width:140px;
-    max-height:70px;
+    max-width:160px;
+    max-height:80px;
     padding:4px 8px;
     font-size:9px;
+    cursor:pointer;
   }
-  #mission-card.collapsed{max-height:18px}
+  #mission-card.collapsed{max-height:22px}
+  #mission-card.collapsed #mission-desc,#mission-card.collapsed #mission-prog-wrap{display:none}
+  #mission-card.collapsed::after{content:' ▾';font-size:9px;opacity:.5;margin-left:4px}
   #mission-title{font-size:10px}
   #mission-desc{font-size:8px}
 
