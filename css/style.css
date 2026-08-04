@@ -373,7 +373,8 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
 .ta-joy{position:relative;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(10,20,30,.55);border:1.5px solid rgba(255,255,255,.28);touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(6px);transition:background .08s,border-color .08s}
 .ta-joy.active{background:rgba(255,138,92,.55);border-color:var(--acc)}
 .ta-joy-knob{position:absolute;left:50%;top:50%;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.38);border:2px solid rgba(255,255,255,.55);transform:translate(-50%,-50%);transition:transform .04s;box-shadow:0 0 10px rgba(255,138,92,.35)}
-.ta-joy.ta-lg{width:clamp(62px,16vmin,78px);height:clamp(62px,16vmin,78px)}
+.ta-joy.ta-lg{width:clamp(90px,22vmin,120px);height:clamp(90px,22vmin,120px)}
+#mine-joy-wrap{position:absolute;left:72%;top:50%;transform:translate(-50%,-50%);z-index:52;pointer-events:auto}
 /* flight touch */
 #touch-fly{position:absolute;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);display:none;gap:12px;pointer-events:auto;z-index:52}
 .tf-btn{display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:12px;background:rgba(10,20,30,.6);border:1.5px solid rgba(120,220,240,.35);font-size:12px;font-weight:600;color:var(--ink);backdrop-filter:blur(6px);touch-action:none;transition:background .08s,transform .08s}
@@ -419,8 +420,8 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   /* right-side action buttons — bottom-right */
   .ta-lg{width:58px;height:58px;font-size:14px}
   .ta-sm{width:44px;height:44px;font-size:11px}
-  .ta-joy.ta-lg{width:58px;height:58px}
-  .ta-joy-knob{width:18px;height:18px}
+  .ta-joy.ta-lg{width:84px;height:84px}
+  .ta-joy-knob{width:24px;height:24px}
   .tf-btn{width:48px;height:48px;font-size:11px}
 
   /* utility buttons — 2-col grid on right side, below notify */
@@ -528,8 +529,9 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   }
   #touch-arc .ta-row{display:flex;flex-direction:column;gap:4px}
   .ta-lg,.ta-sm{width:46px;height:46px;font-size:12px}
-  .ta-joy.ta-lg{width:46px;height:46px}
-  .ta-joy-knob{width:16px;height:16px}
+  .ta-joy.ta-lg{width:72px;height:72px}
+  .ta-joy-knob{width:20px;height:20px}
+  #mine-joy-wrap{left:70%}
 
   #alert-center{top:34px;font-size:10px;padding:3px 10px}
   #interact-hint{top:calc(50% + 10px);font-size:10px;padding:4px 10px}
@@ -541,8 +543,8 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #touch-top{gap:4px;width:64px}
   .ta-lg{width:54px;height:54px;font-size:13px}
   .ta-sm{width:40px;height:40px;font-size:10px}
-  .ta-joy.ta-lg{width:54px;height:54px}
-  .ta-joy-knob{width:16px;height:16px}
+  .ta-joy.ta-lg{width:78px;height:78px}
+  .ta-joy-knob{width:22px;height:22px}
   .hb-slot{width:28px;height:28px}
   .hb-slot img{width:22px;height:22px}
   #mission-card{min-width:110px;padding:4px 8px}

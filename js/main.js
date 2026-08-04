@@ -650,7 +650,9 @@ class Game {
     mineBase.addEventListener('touchmove', onMineMove, { passive: false });
     mineBase.addEventListener('touchend', onMineEnd, { passive: false });
     mineBase.addEventListener('touchcancel', onMineEnd, { passive: false });
-    arc.appendChild(mineBase);
+    const mineWrap = document.getElementById('mine-joy-wrap');
+    if (mineWrap) mineWrap.appendChild(mineBase);
+    else arc.appendChild(mineBase);
 
     // 飞行触屏按钮（默认隐藏，飞行时显示）
     const fly = document.getElementById('touch-fly');
