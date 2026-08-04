@@ -88,6 +88,7 @@ class Inventory {
       d.className = 'hb-slot';
       d.innerHTML = `<span class="key">${i + 1}</span><img class="hidden"><span class="cnt"></span>`;
       d.addEventListener('click', () => { this.sel = i; this.refresh(); g.audio.uiHover(); });
+      d.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); this.sel = i; this.refresh(); g.audio.uiHover(); }, { passive: false });
       this.elHotbar.appendChild(d);
     }
 
@@ -100,6 +101,12 @@ class Inventory {
       d.addEventListener('mouseenter', (e) => { this.showTip(arrOf(which)[i], e); g.audio.uiHover(); });
       d.addEventListener('mousemove', (e) => this.moveTip(e));
       d.addEventListener('mouseleave', () => this.hideTip());
+      // 触屏支持：单击选中/放置
+      d.addEventListener('touchstart', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const fakeEvent = { preventDefault() {}, stopPropagation() {}, button: 0, shiftKey: false };
+        this.slotClick(arrOf(which), i, fakeEvent);
+      }, { passive: false });
       parent.appendChild(d);
       return d;
     };
@@ -217,15 +224,38 @@ class Inventory {
   showDetail(s) {
     if (!s) { this.elDetail.innerHTML = '选择一件物品查看详情'; this.elDetail.className = 'detail-empty'; return; }
     const def = ITEMS[s.id];
+    const p = this.g.player;
     this.elDetail.className = 'item-card';
     let actions = '';
     if (def.use) actions += `<button class="btn sm" data-use="${s.id}">使用</button>`;
+    if (def.armorDef) {
+      const isEquipped = p.armorId === s.id;
+      actions += `<button class="btn sm" data-equip="${s.id}">${isEquipped ? '卸下装甲' : '装备装甲'}</button>`;
+      if (isEquipped) actions += `<div style="margin-top:6px;color:#6ab4e8;font-size:12px;">当前装备 · 减伤 ${Math.round(def.armorDef * 100)}%</div>`;
+    }
     this.elDetail.innerHTML = `
       <div class="ic-head"><img src="${this.g.atlas.icon(s.id)}"><div><h3>${def.name}</h3><div class="ic-type">${def.type} · 持有 ${this.count(s.id)}</div></div></div>
       <div class="ic-desc">${def.desc}</div>
       <div class="ic-actions">${actions}</div>`;
     const useBtn = this.elDetail.querySelector('[data-use]');
     if (useBtn) useBtn.addEventListener('click', () => { this.useItem(s.id); this.showDetail(this.count(s.id) > 0 ? { id: s.id, n: this.count(s.id) } : null); });
+    const equipBtn = this.elDetail.querySelector('[data-equip]');
+    if (equipBtn) equipBtn.addEventListener('click', () => { this.equipArmor(s.id); this.showDetail(s); });
+  }
+
+  equipArmor(id) {
+    const p = this.g.player;
+    if (p.armorId === id) {
+      p.armorId = null;
+      p.armorDef = 0;
+      this.g.hud.notify('已卸下装甲', 'info');
+    } else {
+      p.armorId = id;
+      p.armorDef = ITEMS[id].armorDef || 0;
+      this.g.hud.notify(`已装备 ${ITEMS[id].name} —— 减伤 ${Math.round(p.armorDef * 100)}%`, 'success');
+    }
+    this.g.audio.uiClick();
+    this.refresh();
   }
 
   useItem(id) {
@@ -235,9 +265,14 @@ class Inventory {
     if (def.use === 'hazard') p.hazard = Math.min(100, p.hazard + def.useAmt);
     if (def.use === 'ls') p.ls = Math.min(100, p.ls + def.useAmt);
     if (def.use === 'hp') p.hp = Math.min(100, p.hp + def.useAmt);
+    if (def.use === 'food') {
+      if (def.hpAmt) p.hp = Math.min(100, p.hp + def.hpAmt);
+      if (def.lsAmt) p.ls = Math.min(100, p.ls + def.lsAmt);
+      if (def.hazAmt) p.hazard = Math.min(100, p.hazard + def.hazAmt);
+    }
     this.consume(id, 1);
     this.g.audio.useItem();
-    this.g.hud.notify(`已使用 ${def.name}`, 'success');
+    this.g.hud.notify(`已食用 ${def.name}`, 'success');
     return true;
   }
 

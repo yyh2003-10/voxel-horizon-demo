@@ -32,7 +32,7 @@ class Ship {
     body.position.y = 1.6;
     grp.add(body);
     const nose = new THREE.Mesh(new THREE.ConeGeometry(0.85, 2.2, 8), red);
-    nose.rotation.x = Math.PI / 2;
+    nose.rotation.x = -Math.PI / 2;
     nose.position.set(0, 1.6, -3.7);
     grp.add(nose);
     const cabin = new THREE.Mesh(new THREE.SphereGeometry(0.85, 12, 10), glassMat);

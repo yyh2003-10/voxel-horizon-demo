@@ -28,6 +28,10 @@ class Player {
     this.flashlight = null;
     this.scanCd = 0;
     this.ghost = null; // 放置预览幽灵
+    this.armorId = null;   // 当前装备的装甲物品ID
+    this.armorDef = 0;     // 当前减伤比例
+    this.sleeping = false; // 是否正在睡觉
+    this.sleepTimer = 0;   // 睡觉倒计时
     this.buildViewmodel();
     this.highlight = new THREE.LineSegments(
       new THREE.EdgesGeometry(new THREE.BoxGeometry(1.002, 1.002, 1.002)),
@@ -91,6 +95,7 @@ class Player {
   update(dt) {
     const g = this.g;
     if (this.dead) return;
+    if (this.sleeping) return;
     if (this.inShip) {
       this.pos.copy(g.ship.group.position);
       this.statsTick(dt, true);
@@ -123,14 +128,22 @@ class Player {
     let speed = sprint ? 6.6 : 4.35;
     if (this.inWater) speed *= 0.55;
     const accel = this.onGround ? 60 : 18;
-    this.vel.x = U.lerp(this.vel.x, wish.x * speed, U.clamp(accel * dt, 0, 1));
-    this.vel.z = U.lerp(this.vel.z, wish.z * speed, U.clamp(accel * dt, 0, 1));
+    // 无输入时直接归零，避免残余速度引起镜头浮动
+    if (wish.lengthSq() === 0) {
+      this.vel.x = 0;
+      this.vel.z = 0;
+    } else {
+      this.vel.x = U.lerp(this.vel.x, wish.x * speed, U.clamp(accel * dt, 0, 1));
+      this.vel.z = U.lerp(this.vel.z, wish.z * speed, U.clamp(accel * dt, 0, 1));
+    }
 
     if (this.inWater) {
       this.vel.y -= 5 * dt;
       this.vel.y = Math.max(this.vel.y, -3.2);
       if (input.keys['Space']) this.vel.y = Math.min(this.vel.y + 16 * dt, 3.4);
     } else {
+      // 地面上时阻止重力累积，避免微弹跳
+      if (this.onGround && this.vel.y <= 0) this.vel.y = 0;
       this.vel.y -= CFG.GRAVITY * dt;
       if (input.keys['Space']) {
         if (this.onGround) {
@@ -288,17 +301,22 @@ class Player {
     }
     const wantMine = input.buttons[0] && !this.visor && !g.uiOpen();
     const cHit = wantMine ? g.fauna.raycastCreature(this.eyePos(), this.lookDir(), CFG.REACH + 2) : null;
-    if (wantMine && cHit && (!this.target || cHit.dist < this.target.dist)) {
+    const mHit = wantMine ? g.fauna.raycastMonster(this.eyePos(), this.lookDir(), CFG.REACH + 2) : null;
+    // 优先攻击距离更近的目标（怪物或生物）
+    const bestMob = (!cHit && !mHit) ? null : (!cHit ? mHit : (!mHit ? cHit : (mHit.dist < cHit.dist ? mHit : cHit)));
+    const isMonster = bestMob === mHit;
+    if (wantMine && bestMob && (!this.target || bestMob.dist < this.target.dist)) {
       const tip = this.vmTipWorld();
-      const cpos = cHit.creature.grp.position.clone();
-      cpos.y += cHit.creature.sp.size;
-      g.fx.laserShow(tip, cpos, '#ff5c4c');
+      const mobPos = isMonster ? bestMob.monster.grp.position.clone() : bestMob.creature.grp.position.clone();
+      mobPos.y += isMonster ? bestMob.monster.sp.size : bestMob.creature.sp.size;
+      g.fx.laserShow(tip, mobPos, isMonster ? '#ff3c3c' : '#ff5c4c');
       g.audio.setLoop('laser', true, 0.85);
       this.heatUp(dt);
       this.dmgT = (this.dmgT || 0) - dt;
       if (this.dmgT <= 0) {
         this.dmgT = 0.25;
-        g.fauna.hit(cHit.creature, 6);
+        if (isMonster) g.fauna.hitMonster(bestMob.monster, 6);
+        else g.fauna.hit(bestMob.creature, 6);
       }
       this.mining = null;
       this.mineProgress = 0;
@@ -437,11 +455,25 @@ class Player {
       py + 1 > p.y && py < p.y + 1.8) return;
     const existing = g.world.getBlock(px, py, pz);
     if (existing !== B.AIR && !BLOCK_DEF[existing].cross && !BLOCK_DEF[existing].water) return;
+    // 种子必须种在农田上
+    if (sel.id === 'seed_crop1' || sel.id === 'seed_crop2') {
+      const below = g.world.getBlock(px, py - 1, pz);
+      if (below !== B.FARMLAND) {
+        g.hud.notify('种子需要种在农田上！', 'warn');
+        return;
+      }
+    }
     if (g.world.setBlock(px, py, pz, def.place)) {
       g.inv.consume(sel.id, 1);
       g.audio.place(BLOCK_DEF[def.place].snd);
       g.milestones.addStat('placed', 1);
       g.missions.onEvent('place');
+      // 种子种植时注册作物状态
+      if (sel.id === 'seed_crop1' || sel.id === 'seed_crop2') {
+        const cropType = sel.id === 'seed_crop2' ? 2 : 1;
+        g.world.setCropState(px, py, pz, 0, 0, cropType);
+        g.audio.cropPlant();
+      }
     }
   }
 
@@ -484,6 +516,8 @@ class Player {
 
   damage(amt, cause, silent) {
     if (this.dead) return;
+    // 装甲减伤
+    if (this.armorDef > 0) amt = amt * (1 - this.armorDef);
     this.hp -= amt;
     if (!silent) {
       this.g.audio.hurt();
@@ -533,7 +567,38 @@ class Player {
     if (!this.inShip && g.npc) {
       const nHit = g.npc.raycastNpc(this.eyePos(), this.lookDir(), 5);
       if (nHit) {
-        prompt = { key: 'E', text: '对话 · ' + nHit.npc.name, hold: 0.0, action: () => g.npc.talk(nHit.npc) };
+        prompt = { key: 'E', text: '对话 · ' + nHit.npc.name + '（交易）', hold: 0.0, action: () => { g.npc.talk(nHit.npc); setTimeout(() => g.npc.openTrade(nHit.npc), 800); } };
+      }
+    }
+    // 土著人交互
+    if (!this.inShip && g.natives) {
+      const nHit = g.natives.raycastNative(this.eyePos(), this.lookDir(), 5);
+      if (nHit) {
+        prompt = { key: 'E', text: '对话 · ' + nHit.native.name + '（交易）', hold: 0.0, action: () => { g.natives.talk(nHit.native); setTimeout(() => g.natives.openTrade(nHit.native), 800); } };
+      }
+    }
+    // 宝箱交互
+    if (!this.inShip && this.target && this.target.id === B.CHEST) {
+      prompt = { key: 'E', text: '打开宝箱', hold: 0.0, action: () => this.openChest(this.target) };
+    }
+    // 门交互
+    if (!this.inShip && this.target && this.target.id === B.DOOR) {
+      const isOpen = g.world.isDoorOpen(this.target.x, this.target.y, this.target.z);
+      prompt = { key: 'E', text: isOpen ? '关门' : '开门', hold: 0.0, action: () => {
+        const nowOpen = g.world.toggleDoor(this.target.x, this.target.y, this.target.z);
+        g.audio.doorToggle();
+        g.hud.notify(nowOpen ? '门已打开' : '门已关闭', 'info');
+      }};
+    }
+    // 床交互（仅夜晚）
+    if (!this.inShip && this.target && this.target.id === B.BED && g.sky.dayMix < 0.35 && !this.sleeping) {
+      prompt = { key: 'E', text: '睡觉 · 快速度过黑夜', hold: 0.5, action: () => this.startSleep() };
+    }
+    // 作物收获交互
+    if (!this.inShip && this.target && BLOCK_DEF[this.target.id] && BLOCK_DEF[this.target.id].crop) {
+      const stage = BLOCK_DEF[this.target.id].cropStage;
+      if (stage === 2) {
+        prompt = { key: 'E', text: '收获作物', hold: 0.0, action: () => this.harvestCrop(this.target) };
       }
     }
     if (input.keys['KeyZ'] && this.ls < 99) {
@@ -626,14 +691,22 @@ class Player {
 
     const cHit = g.fauna.raycastCreature(this.eyePos(), this.lookDir(), 40);
     const nHit = g.npc ? g.npc.raycastNpc(this.eyePos(), this.lookDir(), 40) : null;
+    // 土著人
+    const naHit = g.natives ? g.natives.raycastNative(this.eyePos(), this.lookDir(), 40) : null;
     const info = document.getElementById('visor-info');
     let subject = null;
-    if (nHit && nHit.dist < (cHit ? cHit.dist : 999)) {
+    if (nHit && nHit.dist < (cHit ? cHit.dist : 999) && (!naHit || nHit.dist < naHit.dist)) {
       subject = { kind: 'npc', npc: nHit.npc };
       info.classList.remove('hidden');
       document.getElementById('vi-name').textContent = nHit.npc.name;
       document.getElementById('vi-type').textContent = '漂泊者 // WANDERER · 智能生命';
       document.getElementById('vi-extra').textContent = `编号 ${nHit.npc.seed % 1000} · 状态：警惕而友善 · 可交谈`;
+    } else if (naHit && naHit.dist < (cHit ? cHit.dist : 999)) {
+      subject = { kind: 'native', native: naHit.native };
+      info.classList.remove('hidden');
+      document.getElementById('vi-name').textContent = naHit.native.name;
+      document.getElementById('vi-type').textContent = '土著智慧生命 // NATIVE · 友好';
+      document.getElementById('vi-extra').textContent = `可交易 · 按 E 对话`;
     } else if (cHit) {
       subject = { kind: 'creature', c: cHit.creature };
       info.classList.remove('hidden');
@@ -653,7 +726,7 @@ class Player {
     }
 
     if (subject && g.input.buttons[0]) {
-      const key = subject.kind === 'creature' ? 'c' + subject.c.sp.seed : (subject.kind === 'npc' ? 'n' + subject.npc.seed : 'b' + subject.id);
+      const key = subject.kind === 'creature' ? 'c' + subject.c.sp.seed : (subject.kind === 'npc' ? 'n' + subject.npc.seed : (subject.kind === 'native' ? 'a' + subject.native.seed : 'b' + subject.id));
       if (!this.isDiscovered(key)) {
         this.analyzeT += dt;
         if (Math.floor(this.analyzeT * 8) !== Math.floor((this.analyzeT - dt) * 8)) g.audio.analyzeTick(this.analyzeT / 1.1);
@@ -679,6 +752,8 @@ class Player {
       entry = { key: 'c' + sp.seed, name: sp.name, kind: '生物', planet: g.planetName, units: 275 };
     } else if (subject.kind === 'npc') {
       entry = { key: 'n' + subject.npc.seed, name: subject.npc.name, kind: '智慧生命', planet: g.planetName, units: 400 };
+    } else if (subject.kind === 'native') {
+      entry = { key: 'a' + subject.native.seed, name: subject.native.name, kind: '土著智慧生命', planet: g.planetName, units: 500 };
     } else {
       const def = BLOCK_DEF[subject.id];
       entry = { key: 'b' + subject.id, name: def.name, kind: def.flora ? '植物' : '矿物', planet: g.planetName, units: def.flora ? 55 : 85 };
@@ -706,12 +781,117 @@ class Player {
   }
 
   serialize() {
-    return { pos: this.pos.toArray(), yaw: this.yaw, pitch: this.pitch, hp: this.hp, hazard: this.hazard, ls: this.ls, flash: this.flashOn };
+    return { pos: this.pos.toArray(), yaw: this.yaw, pitch: this.pitch, hp: this.hp, hazard: this.hazard, ls: this.ls, flash: this.flashOn, armorId: this.armorId, armorDef: this.armorDef, sleeping: this.sleeping, sleepTimer: this.sleepTimer };
   }
   deserialize(d) {
     if (!d) return;
     this.pos.fromArray(d.pos);
     this.yaw = d.yaw; this.pitch = d.pitch;
     this.hp = d.hp; this.hazard = d.hazard; this.ls = d.ls;
+    this.armorId = d.armorId || null;
+    this.armorDef = d.armorDef || 0;
+    this.sleeping = d.sleeping || false;
+    this.sleepTimer = d.sleepTimer || 0;
+  }
+
+  /**
+   * 打开宝箱，生成随机战利品
+   */
+  openChest(t) {
+    const g = this.g;
+    // 生成战利品
+    const loot = Player.generateLoot(g.palette);
+    // 先尝试添加到背包
+    let count = 0;
+    for (const item of loot) {
+      const added = g.inv.add(item.id, item.n);
+      if (added > 0) { g.hud.toast(item.id, added); count++; }
+    }
+    if (count > 0) {
+      // 库存有空间，移除宝箱方块
+      g.world.setBlock(t.x, t.y, t.z, B.AIR);
+      g.audio.chestOpen();
+      g.fx.spawn(t.x + 0.5, t.y + 0.5, t.z + 0.5, { n: 12, col: '#e8c84a', speed: 2, life: 0.6 });
+      g.hud.notify('宝箱已开启！', 'success');
+    } else {
+      g.hud.notify('库存已满！', 'warn');
+    }
+  }
+
+  /**
+   * 收获成熟作物
+   */
+  harvestCrop(t) {
+    const g = this.g;
+    const isAdvanced = t.id === B.CROP_S3 && g.world.getCropState(t.x, t.y, t.z)?.stage === 2;
+    // 判断是哪种作物（根据cropState或方块类型）
+    const cropState = g.world.getCropState(t.x, t.y, t.z);
+    const cropType = (cropState && cropState.stage === 2) ? (cropState.cropType || 1) : 1;
+    // 移除作物方块
+    g.world.setBlock(t.x, t.y, t.z, B.AIR);
+    g.world.removeCropState(t.x, t.y, t.z);
+    // 生成收获物
+    const loot = [];
+    if (cropType === 2) {
+      loot.push({ id: 'crop2_raw', n: 2 + Math.floor(Math.random() * 2) });
+      // 高级作物：100% 掉落 1-2 枚种子
+      const seedN = 1 + Math.floor(Math.random() * 2);
+      loot.push({ id: 'seed_crop2', n: seedN });
+    } else {
+      loot.push({ id: 'crop1_raw', n: 2 + Math.floor(Math.random() * 3) });
+      // 基础作物：80% 掉落 1 枚种子
+      if (Math.random() < 0.8) loot.push({ id: 'seed_crop1', n: 1 });
+    }
+    let count = 0;
+    for (const item of loot) {
+      const added = g.inv.add(item.id, item.n);
+      if (added > 0) { g.hud.toast(item.id, added); count++; }
+    }
+    if (count > 0) {
+      g.audio.cropHarvest();
+      g.fx.spawn(t.x + 0.5, t.y + 0.5, t.z + 0.5, { n: 8, col: '#8abb5a', speed: 1.5, life: 0.5 });
+      g.hud.notify('收获完成！', 'success');
+    } else {
+      g.hud.notify('库存已满！', 'warn');
+    }
+  }
+
+  /**
+   * 开始睡觉
+   */
+  startSleep() {
+    this.sleeping = true;
+    this.sleepTimer = 10;
+    this.g.audio.bedUse();
+    this.g.hud.showSleepScreen(true);
+  }
+
+  /**
+   * 生成宝箱战利品
+   */
+  static generateLoot(pal) {
+    const rng = Math.random;
+    const loot = [];
+    // 基础资源（80%概率，1-3种）
+    const baseItems = ['ferrite', 'carbon', 'sodium', 'dihydrogen', 'oxygen', 'copper'];
+    const baseCount = 1 + Math.floor(rng() * 3);
+    for (let i = 0; i < baseCount; i++) {
+      const id = baseItems[Math.floor(rng() * baseItems.length)];
+      const n = 5 + Math.floor(rng() * 26);
+      loot.push({ id, n });
+    }
+    // 高级物品（15%概率）
+    if (rng() < 0.15) {
+      const advItems = ['metal_plate', 'nanotube'];
+      const id = advItems[Math.floor(rng() * advItems.length)];
+      loot.push({ id, n: 1 + Math.floor(rng() * 3) });
+    }
+    // 稀有物品（5%概率）
+    if (rng() < 0.05) {
+      const rareItems = ['armor', 'launch_fuel', 'warp_cell'];
+      const id = rareItems[Math.floor(rng() * rareItems.length)];
+      loot.push({ id, n: 1 });
+    }
+    return loot;
   }
 }

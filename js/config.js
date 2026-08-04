@@ -14,14 +14,17 @@ const B = {
   AIR: 0, GRASS: 1, DIRT: 2, STONE: 3, SAND: 4, LOG: 5, LEAVES: 6, PLANKS: 7,
   GLASS: 8, ALLOY: 9, LAMP: 10, WATER: 11, TUFT: 12, PLANT: 13, NA_PLANT: 14,
   H_CRYS: 15, O_PLANT: 16, FERRITE: 17, COPPER: 18, BEDROCK: 19, FRAME: 20,
-  STAIRS: 21, WINDOW: 22
+  STAIRS: 21, WINDOW: 22, CHEST: 23, BED: 24,
+  DOOR: 25, CROP_S1: 26, CROP_S2: 27, CROP_S3: 28, FARMLAND: 29
 };
 
 const T = {
   GRASS_TOP: 0, GRASS_SIDE: 1, DIRT: 2, STONE: 3, SAND: 4, LOG: 5, LOG_TOP: 6,
   LEAVES: 7, PLANKS: 8, GLASS: 9, ALLOY: 10, LAMP: 11, WATER: 12, TUFT: 13,
   PLANT: 14, NA: 15, H: 16, O2: 17, FERRITE: 18, COPPER: 19, BEDROCK: 20,
-  CRACK0: 21, CRACK1: 22, CRACK2: 23, FRAME: 24, STAIRS: 25, WINDOW: 26
+  CRACK0: 21, CRACK1: 22, CRACK2: 23, FRAME: 24, STAIRS: 25, WINDOW: 26,
+  CHEST: 27, BED: 28,
+  DOOR: 29, CROP_S1: 30, CROP_S2: 31, CROP_S3: 32, FARMLAND: 33
 };
 
 const BLOCK_DEF = [];
@@ -44,10 +47,17 @@ BLOCK_DEF[B.H_CRYS] = { name: '双氢晶簇', solid: false, cross: true, tiles: 
 BLOCK_DEF[B.O_PLANT] = { name: '呼吸红花', solid: false, cross: true, tiles: { all: T.O2 }, hard: 0.15, snd: 'crystal', drops: [{ id: 'oxygen', n: [2, 3] }], flora: true, scan: 'o2' };
 BLOCK_DEF[B.FERRITE] = { name: '铁屑岩', solid: true, tiles: { all: T.FERRITE }, hard: 0.8, snd: 'stone', drops: [{ id: 'ferrite', n: [3, 5] }], scan: 'fe' };
 BLOCK_DEF[B.COPPER] = { name: '铜矿脉', solid: true, tiles: { all: T.COPPER }, hard: 1.25, snd: 'stone', drops: [{ id: 'copper', n: [2, 4] }], scan: 'cu' };
-BLOCK_DEF[B.BEDROCK] = { name: '星核岩', solid: true, tiles: { all: T.BEDROCK }, hard: Infinity, snd: 'stone' };
+BLOCK_DEF[B.BEDROCK] = { name: '星核岩', solid: true, tiles: { all: T.BEDROCK }, hard: Infinity, snd: 'stone', drops: [] };
 BLOCK_DEF[B.FRAME] = { name: '合金骨架', solid: true, tiles: { all: T.FRAME }, hard: 0.85, snd: 'metal', drops: [{ id: 'b_frame', n: [1, 1] }] };
 BLOCK_DEF[B.STAIRS] = { name: '阶梯块', solid: true, tiles: { all: T.STAIRS }, hard: 0.7, snd: 'stone', drops: [{ id: 'b_stairs', n: [1, 1] }] };
 BLOCK_DEF[B.WINDOW] = { name: '观察窗格', solid: true, glass: true, tiles: { all: T.WINDOW }, hard: 0.35, snd: 'glass', drops: [{ id: 'b_window', n: [1, 1] }] };
+BLOCK_DEF[B.CHEST] = { name: '宝箱', solid: true, tiles: { all: T.CHEST }, hard: 2.0, snd: 'wood', drops: [] };
+BLOCK_DEF[B.BED] = { name: '床', solid: true, tiles: { all: T.BED }, hard: 1.0, snd: 'wood', drops: [{ id: 'item_bed', n: [1, 1] }] };
+BLOCK_DEF[B.DOOR] = { name: '门', solid: true, tiles: { all: T.DOOR }, hard: 0.8, snd: 'wood', drops: [{ id: 'item_door', n: [1, 1] }], door: true };
+BLOCK_DEF[B.CROP_S1] = { name: '作物·种子', solid: false, cross: true, tiles: { all: T.CROP_S1 }, hard: 0.1, snd: 'grass', drops: [], flora: true, crop: true, cropStage: 0 };
+BLOCK_DEF[B.CROP_S2] = { name: '作物·幼苗', solid: false, cross: true, tiles: { all: T.CROP_S2 }, hard: 0.1, snd: 'grass', drops: [], flora: true, crop: true, cropStage: 1 };
+BLOCK_DEF[B.CROP_S3] = { name: '作物·成熟', solid: false, cross: true, tiles: { all: T.CROP_S3 }, hard: 0.1, snd: 'grass', drops: [], flora: true, crop: true, cropStage: 2 };
+BLOCK_DEF[B.FARMLAND] = { name: '农田', solid: true, tiles: { all: T.FARMLAND }, hard: 0.5, snd: 'grass', drops: [{ id: 'b_farmland', n: [1, 1] }] };
 
 const ITEMS = {
   carbon: { name: '碳', type: '元素 · 生命燃料', sym: 'C', col: '#e05252', stack: 250, desc: '构成异星植物的基础元素，几乎所有科技合成都离不开它。' },
@@ -74,7 +84,18 @@ const ITEMS = {
   warp_cell: { name: '跃迁电池', type: '科技组件', glyph: 'warp', col: '#b98bff', stack: 5, desc: '蕴含扭曲时空的能量，每次超光速跃迁消耗一枚。' },
   ion_battery: { name: '离子电池', type: '补给品', glyph: 'batt', col: '#ffd166', stack: 20, use: 'hazard', useAmt: 50, desc: '右键使用：为危险防护充能 +50。' },
   o2_capsule: { name: '氧气胶囊', type: '补给品', glyph: 'o2c', col: '#ff8a7a', stack: 20, use: 'ls', useAmt: 50, desc: '右键使用：为生命维持充能 +50。' },
-  medkit: { name: '修复凝胶', type: '补给品', glyph: 'med', col: '#7de8a0', stack: 20, use: 'hp', useAmt: 40, desc: '右键使用：恢复生命 +40。' }
+  medkit: { name: '修复凝胶', type: '补给品', glyph: 'med', col: '#7de8a0', stack: 20, use: 'hp', useAmt: 40, desc: '右键使用：恢复生命 +40。' },
+  armor: { name: '防护装甲', type: '装备', glyph: 'armor', col: '#8a9aaa', stack: 1, armorDef: 0.25, desc: '穿戴后减少 25% 受到的伤害。' },
+  armor_alloy: { name: '合金装甲', type: '装备', glyph: 'armor2', col: '#e8c84a', stack: 1, armorDef: 0.40, desc: '高级合金装甲，减少 40% 受到的伤害。' },
+  item_bed: { name: '床', type: '家具', place: B.BED, stack: 1, glyph: 'bed', col: '#6ab4e8', desc: '放置后右键睡觉，在夜晚可快速度过黑夜。' },
+  item_door: { name: '木门', type: '建材 · 家具', place: B.DOOR, stack: 16, glyph: 'door', col: '#8a6a40', desc: '可开关的木门，装在建筑入口处。' },
+  b_farmland: { name: '农田', type: '建材 · 农业', place: B.FARMLAND, stack: 32, glyph: 'farmland', col: '#6a5a3d', desc: '耕作过的土地，种子必须种在农田上才能生长。' },
+  seed_crop1: { name: '基础种子', type: '农业', place: B.CROP_S1, stack: 32, glyph: 'seed1', col: '#7ab84a', desc: '种植后生长为基础食材。白天生长，夜晚暂停。' },
+  seed_crop2: { name: '高级种子', type: '农业', place: B.CROP_S2, stack: 32, glyph: 'seed2', col: '#e8a040', desc: '种植后生长为高级食材。白天生长，夜晚暂停。' },
+  crop1_raw: { name: '基础食材', type: '食材', glyph: 'food1', col: '#7ab84a', stack: 20, desc: '从基础作物收获的食材，可合成料理。' },
+  crop2_raw: { name: '高级食材', type: '食材', glyph: 'food2', col: '#e8a040', stack: 20, desc: '从高级作物收获的食材，可合成高级料理。' },
+  food_basic: { name: '基础料理', type: '补给品', glyph: 'food_b', col: '#6ab84a', stack: 10, use: 'food', useAmt: 0, hpAmt: 15, lsAmt: 15, hazAmt: 0, desc: '右键食用：恢复生命 +15，生命维持 +15。' },
+  food_advanced: { name: '高级料理', type: '补给品', glyph: 'food_a', col: '#e8c84a', stack: 10, use: 'food', useAmt: 0, hpAmt: 30, lsAmt: 25, hazAmt: 20, desc: '右键食用：恢复生命 +30，生命维持 +25，危险防护 +20。' }
 };
 
 const RECIPES = [
@@ -91,7 +112,16 @@ const RECIPES = [
   { id: 'b_frame', out: 4, cat: '建材', req: [['ferrite', 20], ['carbon', 10]], desc: '合金骨架 —— 支撑更高更大的建筑。' },
   { id: 'b_lamp', out: 2, cat: '建材', req: [['carbon', 15], ['ferrite', 10], ['sodium', 5]], desc: '照亮寒夜的常亮光源。' },
   { id: 'b_stairs', out: 4, cat: '建材', req: [['b_stone', 2], ['ferrite', 5]], desc: '岩石切割的阶梯，拾级而上。' },
-  { id: 'b_window', out: 2, cat: '建材', req: [['b_glass', 1], ['ferrite', 4]], desc: '金属框架 + 晶化玻璃 = 观星窗。' }
+  { id: 'b_window', out: 2, cat: '建材', req: [['b_glass', 1], ['ferrite', 4]], desc: '金属框架 + 晶化玻璃 = 观星窗。' },
+  { id: 'armor', out: 1, cat: '装备', req: [['ferrite', 50], ['carbon', 20]], desc: '基础防护装甲，减少 25% 受到的伤害。' },
+  { id: 'armor_alloy', out: 1, cat: '装备', req: [['metal_plate', 3], ['nanotube', 2], ['ferrite', 30]], desc: '高级合金装甲，减少 40% 受到的伤害。' },
+  { id: 'item_bed', out: 1, cat: '家具', req: [['b_log', 4], ['biomass', 3]], desc: '一张简易的床，可在夜晚快速休息。' },
+  { id: 'item_door', out: 2, cat: '建材', req: [['b_planks', 4], ['b_log', 1]], desc: '木板加工的门，装在建筑入口处。' },
+  { id: 'b_farmland', out: 4, cat: '农业', req: [['b_dirt', 2], ['biomass', 1]], desc: '耕作土地，种子必须种在农田上才能生长。' },
+  { id: 'food_basic', out: 1, cat: '补给', req: [['crop1_raw', 3], ['crop2_raw', 1]], desc: '基础食材烹制的料理，恢复生命与维持。' },
+  { id: 'food_advanced', out: 1, cat: '补给', req: [['crop2_raw', 3], ['crop1_raw', 1], ['carbon', 5]], desc: '高级食材烹制的料理，全面恢复。' },
+  { id: 'seed_crop1', out: 2, cat: '农业', req: [['crop1_raw', 1], ['biomass', 2]], desc: '从食材中提取种子，继续种植。' },
+  { id: 'seed_crop2', out: 2, cat: '农业', req: [['crop2_raw', 1], ['biomass', 3]], desc: '从高级食材中提取种子。' }
 ];
 
 const PALETTES = [
@@ -175,4 +205,35 @@ const MILESTONE_DEFS = [
   { key: 'survive', name: '不灭远行者', unit: '秒', tiers: [600, 1800, 5400], subs: ['活过十分钟', '半小时的坚守', '与星球共存'] }
 ];
 
-const DEFAULT_SETTINGS = { master: 80, music: 60, sfx: 90, sens: 100, fov: 78, dist: 4, invert: false };
+const DEFAULT_SETTINGS = { master: 80, music: 60, sfx: 90, sens: 100, fov: 78, dist: 4, invert: false, quality: 'auto' };
+
+// 画质预设：控制光源、粒子、着色器动画、像素比等
+const QUALITY_PRESETS = {
+  high: {
+    maxLights: 6,
+    maxParticles: 600,
+    enableSway: true,
+    dpr: 1.75,
+    fogNear: 0.45,
+    fogFar: 1.05,
+    starDensity: 1.0
+  },
+  medium: {
+    maxLights: 4,
+    maxParticles: 400,
+    enableSway: true,
+    dpr: 1.25,
+    fogNear: 0.40,
+    fogFar: 0.95,
+    starDensity: 0.8
+  },
+  low: {
+    maxLights: 3,
+    maxParticles: 250,
+    enableSway: false,
+    dpr: 1.0,
+    fogNear: 0.35,
+    fogFar: 0.85,
+    starDensity: 0.6
+  }
+};

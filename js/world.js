@@ -24,6 +24,8 @@ class World {
     this.lampPool = [];
     this.heightCache = new Map();
     this.matsReady = false;
+    this.doorStates = new Map(); // key: "x,y,z" → true(开)/false(关)
+    this.cropStates = new Map(); // key: "x,y,z" → {stage, timer}
   }
 
   setPlanet(seed, pal) {
@@ -39,25 +41,49 @@ class World {
     this.heightCache = new Map();
     this.lamps = [];
     this.buildMaterials();
+    this.buildingGen = new BuildingGenerator(this);
   }
 
   buildMaterials() {
     const tex = this.g.atlas.texture;
+    const enableSway = this.g._qualityPreset ? this.g._qualityPreset.enableSway : true;
+
     if (this.matOpaque) {
       this.matOpaque.map = tex; this.matCutout.map = tex; this.matWater.map = tex;
       this.matOpaque.needsUpdate = this.matCutout.needsUpdate = this.matWater.needsUpdate = true;
+      // 重新应用摇摆着色器（如果画质设置改变）
+      if (enableSway && !this.matCutout._swayApplied) {
+        this.matCutout.onBeforeCompile = (shader) => {
+          shader.uniforms.uTime = this.g.timeUniform;
+          shader.vertexShader = 'uniform float uTime;\nattribute float sway;\n' + shader.vertexShader.replace(
+            '#include <begin_vertex>',
+            '#include <begin_vertex>\n transformed.x += sway * sin(uTime*1.7 + position.x*0.9 + position.z*1.3)*0.07;\n transformed.z += sway * cos(uTime*1.3 + position.x*1.1)*0.07;'
+          );
+        };
+        this.matCutout._swayApplied = true;
+        this.matCutout.needsUpdate = true;
+      } else if (!enableSway && this.matCutout._swayApplied) {
+        // 禁用摇摆：创建新材质
+        this.matCutout = new THREE.MeshLambertMaterial({ map: tex, vertexColors: true, alphaTest: 0.45, side: THREE.DoubleSide });
+        this.matCutout._swayApplied = false;
+      }
       return;
     }
     this.matOpaque = new THREE.MeshLambertMaterial({ map: tex, vertexColors: true });
     this.matCutout = new THREE.MeshLambertMaterial({ map: tex, vertexColors: true, alphaTest: 0.45, side: THREE.DoubleSide });
     this.matWater = new THREE.MeshLambertMaterial({ map: tex, vertexColors: true, transparent: true, opacity: 0.72, depthWrite: false });
-    this.matCutout.onBeforeCompile = (shader) => {
-      shader.uniforms.uTime = this.g.timeUniform;
-      shader.vertexShader = 'uniform float uTime;\nattribute float sway;\n' + shader.vertexShader.replace(
-        '#include <begin_vertex>',
-        '#include <begin_vertex>\n transformed.x += sway * sin(uTime*1.7 + position.x*0.9 + position.z*1.3)*0.07;\n transformed.z += sway * cos(uTime*1.3 + position.x*1.1)*0.07;'
-      );
-    };
+
+    // 根据画质决定是否添加摇摆动画着色器
+    if (enableSway) {
+      this.matCutout.onBeforeCompile = (shader) => {
+        shader.uniforms.uTime = this.g.timeUniform;
+        shader.vertexShader = 'uniform float uTime;\nattribute float sway;\n' + shader.vertexShader.replace(
+          '#include <begin_vertex>',
+          '#include <begin_vertex>\n transformed.x += sway * sin(uTime*1.7 + position.x*0.9 + position.z*1.3)*0.07;\n transformed.z += sway * cos(uTime*1.3 + position.x*1.1)*0.07;'
+        );
+      };
+      this.matCutout._swayApplied = true;
+    }
   }
 
   key(cx, cz) { return cx + ',' + cz; }
@@ -133,7 +159,7 @@ class World {
       chunk.data[i] = id;
       if (id === B.LAMP) this.lamps.push([cx * 16 + (i & 15) + 0.5, (i >> 8) + 0.5, cz * 16 + ((i >> 4) & 15) + 0.5]);
     }
-    this.genRuins(chunk);
+    this.buildingGen.generate(chunk, cx, cz);
     chunk.built = true;
   }
 
@@ -277,6 +303,34 @@ class World {
     if (old === B.LAMP) this.lamps = this.lamps.filter(l => !(Math.floor(l[0]) === gx && Math.floor(l[1]) === gy && Math.floor(l[2]) === gz));
     return true;
   }
+
+  isDoorOpen(x, y, z) { return this.doorStates.get(x + ',' + y + ',' + z) === true; }
+
+  toggleDoor(x, y, z) {
+    const key = x + ',' + y + ',' + z;
+    const wasOpen = this.doorStates.get(key) === true;
+    this.doorStates.set(key, !wasOpen);
+    // 门打开时物理视为Air，关闭时恢复为DOOR
+    // 触发邻近chunk重新网格化以更新碰撞
+    const cx = Math.floor(x / 16), cz = Math.floor(z / 16);
+    this.remesh(cx, cz);
+    return !wasOpen; // 返回新的开关状态
+  }
+
+  // 获取门的碰撞方块ID（开门=AIR，关门=DOOR）
+  getDoorCollision(x, y, z) {
+    if (this.getBlock(x, y, z) === B.DOOR && this.isDoorOpen(x, y, z)) return B.AIR;
+    return this.getBlock(x, y, z);
+  }
+
+  // 作物状态管理
+  getCropState(x, y, z) { return this.cropStates.get(x + ',' + y + ',' + z) || null; }
+
+  setCropState(x, y, z, stage, timer, cropType) {
+    this.cropStates.set(x + ',' + y + ',' + z, { stage, timer, cropType: cropType || 1 });
+  }
+
+  removeCropState(x, y, z) { this.cropStates.delete(x + ',' + y + ',' + z); }
 
   remesh(cx, cz) {
     const ch = this.chunks.get(this.key(cx, cz));
@@ -472,7 +526,8 @@ class World {
 
   updateLampLights(px, pz) {
     if (!this.lamps) return;
-    const near = this.lamps.map(l => ({ l, d: U.dist2(l[0], l[2], px, pz) })).filter(o => o.d < 40).sort((a, b) => a.d - b.d).slice(0, 6);
+    const maxLights = this.g._qualityPreset ? this.g._qualityPreset.maxLights : 6;
+    const near = this.lamps.map(l => ({ l, d: U.dist2(l[0], l[2], px, pz) })).filter(o => o.d < 40).sort((a, b) => a.d - b.d).slice(0, maxLights);
     while (this.lampPool.length < near.length) {
       const pl = new THREE.PointLight(0xffdf9e, 1.1, 13, 1.6);
       this.g.scene.add(pl);
@@ -494,7 +549,9 @@ class World {
     let dist = 0, nx = 0, ny = 0, nz = 0;
     for (let i = 0; i < 128; i++) {
       const id = this.getBlock(x, y, z);
-      if (id !== B.AIR && !BLOCK_DEF[id].water) {
+      // 开着的门视为透明，光线穿透
+      if (id === B.DOOR && this.isDoorOpen(x, y, z)) { /* pass through */ }
+      else if (id !== B.AIR && !BLOCK_DEF[id].water) {
         return { x, y, z, id, nx, ny, nz, dist };
       }
       if (tX < tY && tX < tZ) { x += stepX; dist = tX; tX += tDX; nx = -stepX; ny = 0; nz = 0; }
@@ -509,13 +566,29 @@ class World {
     for (let y = Math.floor(minY); y <= Math.floor(maxY); y++)
       for (let x = Math.floor(minX); x <= Math.floor(maxX); x++)
         for (let z = Math.floor(minZ); z <= Math.floor(maxZ); z++) {
-          const b = this.getBlock(x, y, z);
+          let b = this.getBlock(x, y, z);
+          // 开着的门不阻挡碰撞
+          if (b === B.DOOR && this.isDoorOpen(x, y, z)) b = B.AIR;
           if (b !== B.AIR && BLOCK_DEF[b].solid) return true;
         }
     return false;
   }
 
   isWater(x, y, z) { return this.getBlock(Math.floor(x), Math.floor(y), Math.floor(z)) === B.WATER; }
+
+  // 检查某位置附近是否有水（用于农田生成）
+  nearWater(gx, gy, gz, radius) {
+    const r = Math.ceil(radius);
+    for (let dx = -r; dx <= r; dx++) {
+      for (let dz = -r; dz <= r; dz++) {
+        const wx = gx + dx, wz = gz + dz;
+        const sy = this.surfaceY(wx, wz);
+        if (sy < 0) continue;
+        if (this.getBlock(wx, sy, wz) === B.WATER) return true;
+      }
+    }
+    return false;
+  }
 
   findScanTargets(px, py, pz, radius) {
     const out = [];

@@ -209,6 +209,109 @@ class TextureAtlas {
       });
     }
 
+    // 宝箱纹理
+    tile(T.CHEST, p => {
+      // 木箱主体
+      noiseFill(p, '#8a6a40', 12);
+      // 金属边框
+      for (let i = 0; i < px; i++) { p(i, 0, '#6a7078'); p(i, 15, '#5a6068'); }
+      for (let i = 0; i < px; i++) { p(0, i, '#6a7078'); p(15, i, '#5a6068'); }
+      // 木板横纹
+      for (let y = 4; y < px; y += 4) for (let x = 0; x < px; x++) p(x, y, U.shade('#8a6a40', 0.7));
+      // 锁扣
+      for (let x = 6; x <= 9; x++) for (let y = 6; y <= 9; y++) p(x, y, '#c8a040');
+      p(7, 7, '#e8d070'); p(8, 8, '#e8d070');
+      // 高光
+      for (let i = 0; i < 5; i++) p(U.randi(2, 14), U.randi(2, 5), U.shade('#a08050', 1.3));
+    });
+
+    // 床纹理
+    tile(T.BED, p => {
+      // 床板
+      noiseFill(p, U.shade(pal.wood, 1.15), 10);
+      // 床单（蓝色调）
+      for (let y = 3; y < 14; y++) for (let x = 2; x < 14; x++) p(x, y, U.vary('#6ab4e8', rng, 14));
+      // 枕头
+      for (let y = 1; y < 5; y++) for (let x = 4; x < 12; x++) p(x, y, U.vary('#e8e4dc', rng, 6));
+      // 枕头高光
+      p(6, 2, '#ffffff'); p(7, 2, '#f0f0f0');
+      // 床单褶皱
+      for (let i = 0; i < 6; i++) { const x = U.randi(3, 13), y = U.randi(5, 13); p(x, y, U.shade('#6ab4e8', 0.8)); }
+      // 床框边
+      for (let x = 0; x < px; x++) { p(x, 0, '#6a5040'); p(x, 15, '#6a5040'); }
+    });
+
+    // 门纹理
+    tile(T.DOOR, p => {
+      // 门框
+      for (let x = 0; x < px; x++) { p(x, 0, '#5a4030'); p(x, 15, '#5a4030'); }
+      for (let y = 0; y < px; y++) { p(0, y, '#5a4030'); p(15, y, '#5a4030'); }
+      // 门板
+      noiseFill(p, U.shade(pal.wood, 1.1), 10);
+      // 木板横纹
+      for (let y = 3; y < px; y += 3) for (let x = 1; x < 15; x++) p(x, y, U.shade(pal.wood, 0.7));
+      // 门把手
+      for (let x = 10; x <= 11; x++) for (let y = 7; y <= 8; y++) p(x, y, '#c8a040');
+      p(10, 7, '#e8d070');
+      // 高光
+      for (let i = 0; i < 4; i++) p(U.randi(2, 14), U.randi(1, 5), U.shade(pal.wood, 1.3));
+    });
+
+    // 作物种子阶段
+    tile(T.CROP_S1, p => {
+      // 土壤小土堆
+      for (let x = 4; x <= 11; x++) p(x, 13, '#6a5a3d'); p(5, 12, '#6a5a3d'); p(10, 12, '#6a5a3d');
+      // 小芽
+      p(7, 11, '#5aaa40'); p(8, 11, '#5aaa40');
+      p(7, 10, '#6abb50');
+    });
+
+    // 作物幼苗阶段
+    tile(T.CROP_S2, p => {
+      // 土壤
+      for (let x = 3; x <= 12; x++) p(x, 14, '#6a5a3d'); p(4, 13, '#6a5a3d'); p(11, 13, '#6a5a3d');
+      // 茎
+      p(7, 12, '#4a9a30'); p(8, 12, '#4a9a30');
+      p(7, 11, '#5aaa40'); p(8, 11, '#5aaa40');
+      p(7, 10, '#5aaa40'); p(8, 10, '#5aaa40');
+      // 小叶
+      p(6, 10, '#6abb50'); p(9, 10, '#6abb50');
+      p(7, 9, '#6abb50'); p(8, 9, '#6abb50');
+    });
+
+    // 作物成熟阶段
+    tile(T.CROP_S3, p => {
+      // 土壤
+      for (let x = 2; x <= 13; x++) p(x, 14, '#6a5a3d'); p(3, 13, '#6a5a3d'); p(12, 13, '#6a5a3d');
+      // 茎（更高更粗）
+      for (let y = 6; y <= 13; y++) { p(7, y, '#4a9a30'); p(8, y, '#4a9a30'); }
+      // 叶子
+      p(5, 9, '#6abb50'); p(6, 8, '#6abb50'); p(9, 8, '#6abb50'); p(10, 9, '#6abb50');
+      p(5, 11, '#5aaa40'); p(10, 11, '#5aaa40');
+      // 果实/花朵
+      p(6, 5, '#e8c84a'); p(7, 5, '#e8d070'); p(8, 5, '#e8d070'); p(9, 5, '#e8c84a');
+      p(7, 4, '#f0e080'); p(8, 4, '#f0e080');
+    });
+
+    // 农田纹理
+    tile(T.FARMLAND, p => {
+      // 深棕色土壤底色
+      noiseFill(p, '#5a4a32', 14);
+      // 田垄条纹（水平）
+      for (let y = 0; y < px; y++) {
+        const rowColor = (y % 4 < 2) ? '#6a5a3d' : '#4a3a28';
+        for (let x = 0; x < px; x++) p(x, y, U.vary(rowColor, rng, 10));
+      }
+      // 少量绿色芽点
+      for (let i = 0; i < 6; i++) {
+        const x = U.randi(1, 14), y = U.randi(1, 14);
+        p(x, y, '#6a8a3a'); p(x, y - 1, '#7a9a4a');
+      }
+      // 边框阴影
+      for (let i = 0; i < px; i++) { p(i, 0, '#3a2a1a'); p(i, 15, '#3a2a1a'); }
+      for (let i = 0; i < px; i++) { p(0, i, '#3a2a1a'); p(15, i, '#3a2a1a'); }
+    });
+
     if (this.texture) this.texture.dispose();
     const tex = new THREE.CanvasTexture(this.canvas);
     tex.magFilter = THREE.NearestFilter;
@@ -300,6 +403,84 @@ class TextureAtlas {
       } else if (g === 'med') {
         x.strokeRect(10, 14, 28, 22);
         x.fillRect(21, 19, 6, 12); x.fillRect(18, 22, 12, 6);
+      } else if (g === 'armor') {
+        // 盾牌形状
+        x.beginPath(); x.moveTo(24, 5); x.lineTo(40, 14); x.lineTo(38, 32); x.lineTo(24, 44); x.lineTo(10, 32); x.lineTo(8, 14); x.closePath();
+        x.fill(); x.stroke();
+        x.fillStyle = '#c0d0e0';
+        x.beginPath(); x.moveTo(24, 10); x.lineTo(34, 16); x.lineTo(32, 28); x.lineTo(24, 36); x.lineTo(16, 28); x.lineTo(14, 16); x.closePath(); x.fill();
+      } else if (g === 'armor2') {
+        // 高级盾牌
+        x.beginPath(); x.moveTo(24, 3); x.lineTo(42, 13); x.lineTo(40, 34); x.lineTo(24, 45); x.lineTo(8, 34); x.lineTo(6, 13); x.closePath();
+        x.fill(); x.stroke();
+        x.fillStyle = '#f0d870';
+        x.beginPath(); x.moveTo(24, 9); x.lineTo(35, 16); x.lineTo(33, 30); x.lineTo(24, 38); x.lineTo(15, 30); x.lineTo(13, 16); x.closePath(); x.fill();
+        // 星形装饰
+        x.fillStyle = '#fff';
+        x.beginPath(); x.arc(24, 22, 3, 0, 6.28); x.fill();
+      } else if (g === 'bed') {
+        // 床图标
+        x.fillStyle = '#8a6a40';
+        x.fillRect(6, 32, 36, 6); // 床板
+        x.fillStyle = '#6ab4e8';
+        x.fillRect(8, 18, 32, 14); // 床单
+        x.fillStyle = '#e8e4dc';
+        x.fillRect(10, 12, 14, 8); // 枕头
+        x.fillRect(28, 12, 14, 8); // 枕头2
+        x.strokeStyle = col; x.lineWidth = 1.5;
+        x.strokeRect(6, 12, 36, 26);
+      } else if (g === 'door') {
+        // 门图标
+        x.fillStyle = '#8a6a40';
+        x.fillRect(14, 4, 20, 38); // 门板
+        x.fillStyle = '#5a4030';
+        x.fillRect(12, 2, 24, 2); x.fillRect(12, 42, 24, 2); // 上下框
+        x.fillRect(12, 2, 2, 42); x.fillRect(34, 2, 2, 42); // 左右框
+        x.fillStyle = '#c8a040';
+        x.fillRect(28, 22, 4, 4); // 把手
+        x.strokeStyle = col; x.lineWidth = 1;
+        x.strokeRect(12, 2, 24, 42);
+      } else if (g === 'seed1' || g === 'seed2') {
+        // 种子图标
+        const c1 = g === 'seed1' ? '#7ab84a' : '#e8a040';
+        x.fillStyle = c1;
+        x.beginPath(); x.arc(24, 24, 8, 0, 6.28); x.fill();
+        x.fillStyle = '#fff';
+        x.beginPath(); x.arc(22, 22, 2, 0, 6.28); x.fill();
+        x.strokeStyle = col; x.lineWidth = 1.5;
+        x.beginPath(); x.arc(24, 24, 8, 0, 6.28); x.stroke();
+      } else if (g === 'food1' || g === 'food2') {
+        // 食材图标
+        const c2 = g === 'food1' ? '#7ab84a' : '#e8a040';
+        x.fillStyle = c2;
+        x.fillRect(10, 14, 28, 20); // 碗
+        x.fillStyle = '#fff';
+        x.fillRect(12, 16, 24, 2); // 高光
+        x.strokeStyle = col; x.lineWidth = 1.5;
+        x.strokeRect(10, 14, 28, 20);
+      } else if (g === 'food_b' || g === 'food_a') {
+        // 料理图标
+        const c3 = g === 'food_b' ? '#6ab84a' : '#e8c84a';
+        x.fillStyle = '#8a6a40';
+        x.fillRect(8, 8, 32, 30); // 碗
+        x.fillStyle = c3;
+        x.fillRect(10, 10, 28, 16); // 食物
+        x.fillStyle = '#fff';
+        x.fillRect(12, 12, 8, 2); // 高光
+        x.strokeStyle = col; x.lineWidth = 1.5;
+        x.strokeRect(8, 8, 32, 30);
+      } else if (g === 'farmland') {
+        // 农田图标：等距方块 + 田垄
+        x.fillStyle = '#5a4a32';
+        x.fillRect(8, 14, 32, 24);
+        // 田垄条纹
+        x.fillStyle = '#6a5a3d';
+        for (let y = 14; y < 38; y += 6) x.fillRect(8, y, 32, 3);
+        // 绿色芽点
+        x.fillStyle = '#6a8a3a';
+        x.fillRect(14, 20, 2, 3); x.fillRect(24, 26, 2, 3); x.fillRect(34, 22, 2, 3);
+        x.strokeStyle = col; x.lineWidth = 1.5;
+        x.strokeRect(8, 14, 32, 24);
       }
     }
     const url = c.toDataURL();

@@ -83,6 +83,17 @@ body{font-family:var(--fb);color:var(--ink);font-size:16px}
 #hold-ring{position:absolute;left:-54px;top:-4px;transform:rotate(-90deg)}
 #hold-ring .ring-fg{stroke:#fff;stroke-dasharray:113;stroke-dashoffset:113}
 
+/* ---------- minimap ---------- */
+#minimap-wrap{position:absolute;top:8px;left:8px;z-index:25;cursor:pointer}
+#minimap{width:120px;height:120px;border:2px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(0,0,0,.5);image-rendering:pixelated;transition:border-color .15s}
+#minimap-wrap:hover #minimap{border-color:var(--acc2);box-shadow:0 0 12px rgba(102,217,232,.4)}
+#minimap-label{font-family:var(--fh);font-size:9px;letter-spacing:2px;text-align:center;color:rgba(255,255,255,.45);margin-top:2px}
+#minimap-expanded{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.minimap-big-wrap{position:relative;display:flex;flex-direction:column;align-items:center}
+#minimap-big{border:2px solid rgba(255,255,255,.35);border-radius:12px;background:rgba(0,0,0,.6);image-rendering:pixelated;cursor:crosshair;max-width:90vw;max-height:80vh}
+#minimap-big:hover{border-color:var(--acc2)}
+.minimap-hint{font-family:var(--fh);font-size:12px;letter-spacing:2px;color:rgba(255,255,255,.5);margin-top:10px}
+
 /* ---------- stats ---------- */
 #stats-left{position:absolute;left:22px;bottom:24px;display:flex;flex-direction:column;gap:8px}
 #stats-right{position:absolute;right:22px;bottom:24px;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
@@ -335,50 +346,81 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
 /* ===== touch / mobile ===== */
 #touch-layer{position:absolute;inset:0;z-index:50;pointer-events:none}
 #touch-layer:not(.hidden){display:block}
-
-#look-zone{position:absolute;right:0;top:0;width:50%;height:100%;pointer-events:auto;touch-action:none}
-#joy-zone{position:absolute;left:0;top:0;width:50%;height:100%;pointer-events:auto;touch-action:none}
-
-#joy-base{position:absolute;width:110px;height:110px;border-radius:50%;border:2px solid rgba(255,255,255,.22);background:rgba(10,20,30,.35);pointer-events:none;display:none;z-index:51;backdrop-filter:blur(4px)}
-#joy-knob{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:rgba(255,255,255,.28);border:2px solid rgba(255,255,255,.45);box-shadow:0 0 14px rgba(120,220,240,.35);transition:transform .04s}
-
-#touch-btns{position:absolute;right:14px;bottom:80px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;pointer-events:auto;z-index:51}
-.tbtn{display:flex;align-items:center;justify-content:center;width:58px;height:58px;border-radius:50%;background:rgba(10,20,30,.55);border:1.5px solid rgba(255,255,255,.28);font-family:var(--fb);font-size:14px;font-weight:600;color:var(--ink);backdrop-filter:blur(6px);touch-action:none;user-select:none;-webkit-user-select:none;transition:background .08s,transform .08s}
-.tbtn:active{background:rgba(255,138,92,.55);transform:scale(.92);border-color:var(--acc)}
-
-/* 飞行触屏按钮 */
-.ftbtn{position:absolute;display:flex;align-items:center;justify-content:center;width:62px;height:62px;border-radius:12px;background:rgba(10,20,30,.6);border:1.5px solid rgba(120,220,240,.35);font-family:var(--fb);font-size:13px;font-weight:600;color:var(--ink);backdrop-filter:blur(6px);touch-action:none;z-index:52;transition:background .08s,transform .08s}
-.ftbtn:active{background:rgba(102,217,232,.5);transform:scale(.92);border-color:var(--acc2)}
-.ftbtn-up{right:18px;bottom:140px}
-.ftbtn-boost{right:18px;bottom:72px}
-.ftbtn-down{left:18px;bottom:72px}
-.ftbtn-land{left:18px;bottom:140px}
-.ftbtn-warp{left:50%;bottom:72px;transform:translateX(-50%)}
-.ftbtn-warp:active{transform:translateX(-50%) scale(.92)}
-
-/* 触屏时隐藏部分桌面提示 */
+#look-zone{position:absolute;right:0;top:0;width:60%;height:calc(100% - 64px);pointer-events:auto;touch-action:none}
+#joy-zone{position:absolute;left:0;top:0;width:55%;height:calc(100% - 64px);pointer-events:auto;touch-action:none}
+#joy-base{position:absolute;width:120px;height:120px;border-radius:50%;border:2px solid rgba(255,255,255,.22);background:rgba(10,20,30,.35);pointer-events:none;display:none;z-index:51;backdrop-filter:blur(4px)}
+#joy-knob{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;background:rgba(255,255,255,.28);border:2px solid rgba(255,255,255,.45);box-shadow:0 0 14px rgba(120,220,240,.35);transition:transform .04s}
+/* top-right utility strip */
+#touch-top{position:absolute;top:6px;right:6px;display:flex;gap:7px;pointer-events:auto;z-index:52}
+.tu-btn{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:rgba(10,20,30,.55);border:1.5px solid rgba(255,255,255,.22);font-size:12px;font-weight:600;color:var(--ink);touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(6px);transition:background .08s,transform .08s}
+.tu-btn:active{background:rgba(102,217,232,.5);transform:scale(.9)}
+/* right-side action arc */
+#touch-arc{position:absolute;right:10px;bottom:100px;display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:auto;z-index:52}
+.ta-btn{display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(10,20,30,.55);border:1.5px solid rgba(255,255,255,.28);font-size:13px;font-weight:600;color:var(--ink);touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(6px);transition:background .08s,transform .08s}
+.ta-btn:active{background:rgba(255,138,92,.55);transform:scale(.88);border-color:var(--acc)}
+.ta-lg{width:66px;height:66px;font-size:15px}
+.ta-sm{width:52px;height:52px;font-size:12px}
+.ta-row{display:flex;gap:10px}
+/* flight touch */
+#touch-fly{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);display:none;gap:12px;pointer-events:auto;z-index:52}
+.tf-btn{display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:12px;background:rgba(10,20,30,.6);border:1.5px solid rgba(120,220,240,.35);font-size:12px;font-weight:600;color:var(--ink);backdrop-filter:blur(6px);touch-action:none;transition:background .08s,transform .08s}
+.tf-btn:active{background:rgba(102,217,232,.5);transform:scale(.9)}
+/* touch hotbar sizing */
 @media (pointer:coarse){
   #flight-tips{display:none}
   #interact-hint .kbd{display:none}
-  #hotbar{bottom:12px;pointer-events:auto}
-  .hb-slot{width:44px;height:44px;pointer-events:auto;cursor:pointer}
-  .hb-slot img{width:34px;height:34px;inset:5px}
+  #hotbar{bottom:8px;pointer-events:auto}
+  .hb-slot{width:46px;height:46px;pointer-events:auto;cursor:pointer}
+  .hb-slot img{width:36px;height:36px;inset:5px}
   #stats-left,#stats-right{display:none}
   #compass-wrap{max-width:50vw;overflow:hidden}
-  #mission-card{width:220px;bottom:12px;right:auto;left:12px;font-size:12px}
+  #mission-card{width:200px;bottom:12px;right:auto;left:12px;font-size:12px}
   #notify-stack{bottom:auto;top:60px;right:8px;max-width:50vw}
   #toasts{bottom:68px}
   .bar{width:120px}
   #visor-info{min-width:160px;font-size:12px;left:calc(50% + 40px)}
   #visor-side{font-size:10px;left:6vw}
   .visor-corner{width:40px;height:40px}
+  #minimap-wrap{top:6px;left:6px}
+  #minimap{width:90px;height:90px}
 }
 @media (max-width:600px){
-  #touch-btns{gap:6px;bottom:70px;right:8px}
-  .tbtn{width:48px;height:48px;font-size:12px}
-  .ftbtn{width:54px;height:54px;font-size:11px}
+  .hb-slot{width:40px;height:40px}
+  .hb-slot img{width:32px;height:32px}
+  .tu-btn{width:32px;height:32px;font-size:10px}
+  .ta-lg{width:58px;height:58px;font-size:14px}
+  .ta-sm{width:44px;height:44px;font-size:11px}
+  .tf-btn{width:48px;height:48px;font-size:11px}
+  #mission-card{width:170px}
   #hotbar{gap:3px}
-  .hb-slot{width:38px;height:38px}
-  .hb-slot img{width:30px;height:30px}
-  #mission-card{width:180px}
+  #minimap{width:70px;height:70px}
+  #minimap-label{font-size:8px}
+}
+/* tablet landscape — larger touch targets, wider panels */
+@media (min-width:768px) and (max-width:1024px) and (orientation:landscape){
+  .tu-btn{width:44px;height:44px;font-size:12px}
+  .ta-lg{width:72px;height:72px;font-size:16px}
+  .ta-sm{width:56px;height:56px;font-size:13px}
+  .tf-btn{width:56px;height:56px;font-size:13px}
+  #joy-base{width:130px;height:130px}
+  #joy-knob{width:56px;height:56px}
+  #hotbar{bottom:14px;gap:5px}
+  .hb-slot{width:50px;height:50px}
+  .hb-slot img{width:40px;height:40px}
+  #minimap{width:100px;height:100px}
+}
+/* touch-friendly styles for new UI elements */
+@media (pointer:coarse){
+  .detail-equip-btn{padding:12px 20px;font-size:14px;min-height:44px;min-width:44px}
+  .trade-item{padding:12px;min-height:48px}
+  .trade-close{padding:12px;min-height:44px}
+  #sleep-overlay{font-size:20px}
+  #minimap-label{display:none}
+  #minimap-big{max-width:85vw;max-height:75vh}
+  .minimap-hint{font-size:11px}
+}
+@media (min-width:768px) and (max-width:1024px) and (orientation:landscape){
+  .detail-equip-btn{padding:14px 24px;font-size:15px;min-height:48px}
+  .trade-item{padding:16px;min-height:56px}
+  .trade-close{padding:14px;min-height:48px}
 }

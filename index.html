@@ -31,6 +31,11 @@
       <div id="jet-wrap"><div id="jet-bar"></div></div>
     </div>
 
+    <div id="minimap-wrap">
+      <canvas id="minimap" width="120" height="120"></canvas>
+      <div id="minimap-label">地图 [M]</div>
+    </div>
+
     <div id="interact-hint" class="hidden">
       <svg id="hold-ring" width="44" height="44" viewBox="0 0 44 44"><circle class="ring-bg" cx="22" cy="22" r="18"/><circle id="hold-ring-fg" class="ring-fg" cx="22" cy="22" r="18"/></svg>
       <span class="kbd" id="hint-key">E</span><span id="hint-text"></span>
@@ -63,7 +68,9 @@
       <div id="look-zone"></div>
       <div id="joy-zone"></div>
       <div id="joy-base"><div id="joy-knob"></div></div>
-      <div id="touch-btns"></div>
+      <div id="touch-top"></div>
+      <div id="touch-arc"></div>
+      <div id="touch-fly"></div>
     </div>
 
     <div id="flight-hud" class="hidden">
@@ -141,6 +148,13 @@
     </div>
   </div>
 
+  <div id="minimap-expanded" class="screen hidden">
+    <div class="minimap-big-wrap">
+      <canvas id="minimap-big" width="400" height="400"></canvas>
+      <div class="minimap-hint">点击传送 · 点击空白处关闭 · 按 M 关闭</div>
+    </div>
+  </div>
+
   <div id="ship-screen" class="screen hidden">
     <div class="ship-frame panel">
       <div class="ship-head"><span>星舰 · 「拂晓之羽」</span><em>STARSHIP SYSTEMS</em><div class="inv-close">Esc 关闭</div></div>
@@ -208,6 +222,9 @@
       <div class="set-row"><label>渲染距离</label>
         <select id="set-dist"><option value="3">近 (流畅)</option><option value="4" selected>中 (推荐)</option><option value="5">远</option><option value="6">极远 (高配)</option></select><span></span>
       </div>
+      <div class="set-row"><label>画质</label>
+        <select id="set-quality"><option value="auto">自动检测</option><option value="high">高 (推荐桌面)</option><option value="medium">中 (平衡)</option><option value="low">低 (流畅)</option></select><span></span>
+      </div>
       <div class="set-row"><label>飞行反转Y轴</label><input type="checkbox" id="set-invert"><span></span></div>
       <div class="set-actions"><button class="btn sm danger" id="btn-wipe">清除存档</button><button class="btn sm" id="btn-set-back">返回</button></div>
     </div>
@@ -266,6 +283,7 @@
 <script src="js/hud.js"></script>
 <script src="js/missions.js"></script>
 <script src="js/save.js"></script>
+<script src="js/buildings.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

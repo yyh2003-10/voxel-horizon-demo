@@ -47,6 +47,19 @@ class FX {
     }
   }
 
+  setMaxParticles(max) {
+    // 如果新上限更小，裁剪多余粒子
+    while (this.parts.length > max) this.parts.shift();
+    this.max = max;
+    // 重新分配数组（如果需要）
+    if (max > this.posArr.length / 3) {
+      this.posArr = new Float32Array(max * 3);
+      this.colArr = new Float32Array(max * 3);
+      this.points.geometry.attributes.position = new THREE.BufferAttribute(this.posArr, 3);
+      this.points.geometry.attributes.color = new THREE.BufferAttribute(this.colArr, 3);
+    }
+  }
+
   update(dt) {
     for (let i = this.parts.length - 1; i >= 0; i--) {
       const p = this.parts[i];

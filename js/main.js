@@ -5,9 +5,25 @@ const Input = {
   isTouch: false,
   joyActive: false, joyId: null, joyStartX: 0, joyStartY: 0, joyDX: 0, joyDY: 0,
   lookId: null, lookLastX: 0, lookLastY: 0,
-  touchAction: null,
+  _hasTouchCapability() {
+    return ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  },
+  _activateTouchMode(game) {
+    if (this.isTouch) return;
+    this.isTouch = true;
+    this.initTouch(game);
+    // Exit pointer lock if active, and stop listening for it
+    if (document.pointerLockElement) document.exitPointerLock();
+    this._onPLChange && document.removeEventListener('pointerlockchange', this._onPLChange);
+    this._onPLChange = null;
+    // Show touch-layer and build buttons if game already started
+    if (game.state === 'play') {
+      document.getElementById('touch-layer').classList.remove('hidden');
+      game.buildTouchButtons();
+    }
+  },
   init(game) {
-    this.isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    this.isTouch = false; // Only activate when actual touch events arrive
     addEventListener('keydown', e => {
       if (e.repeat) return;
       this.keys[e.code] = true;
@@ -29,7 +45,14 @@ const Input = {
     addEventListener('wheel', e => game.onWheel(e));
     addEventListener('contextmenu', e => e.preventDefault());
     addEventListener('blur', () => { this.keys = {}; this.buttons = {}; });
-    if (this.isTouch) this.initTouch(game);
+    // Listen for the first real touch event to activate touch mode
+    if (this._hasTouchCapability()) {
+      const activateOnce = (e) => {
+        this._activateTouchMode(game);
+        removeEventListener('touchstart', activateOnce);
+      };
+      addEventListener('touchstart', activateOnce, { once: true, passive: true });
+    }
   },
   initTouch(game) {
     const joyBase = document.getElementById('joy-base');
@@ -124,6 +147,8 @@ class Game {
     this.autoSaveT = 0;
     this.input = Input;
     this.initRenderer();
+    this._qualityPreset = QUALITY_PRESETS.high; // 初始化默认值
+    this.applyQualitySettings();
     this.initTitle();
     this.bindUI();
     Input.init(this);
@@ -132,15 +157,16 @@ class Game {
 
   initRenderer() {
     const canvas = document.getElementById('game-canvas');
-    const touch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-    this.isTouch = touch;
-    const dpr = touch ? Math.min(devicePixelRatio, 1.0) : Math.min(devicePixelRatio, 1.75);
+    // Use capability-based check for rendering defaults only;
+    // actual isTouch (touch overlay, pointer-lock skip) is deferred to first touch event
+    const touchCapable = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    const dpr = touchCapable ? Math.min(devicePixelRatio, 1.0) : Math.min(devicePixelRatio, 1.75);
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(dpr);
     this.renderer.setSize(innerWidth, innerHeight);
     this.renderer.outputEncoding = THREE.sRGBEncoding;
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.Fog('#cfe8f0', 30, touch ? 90 : 120);
+    this.scene.fog = new THREE.Fog('#cfe8f0', 30, touchCapable ? 90 : 120);
     this.camera = new THREE.PerspectiveCamera(this.settings.fov, innerWidth / innerHeight, 0.08, 1600);
     this.scene.add(this.camera);
     this.atlas = new TextureAtlas();
@@ -221,6 +247,7 @@ class Game {
     setBind('set-sens', 'sens');
     setBind('set-fov', 'fov');
     setBind('set-dist', 'dist');
+    setBind('set-quality', 'quality');
     setBind('set-invert', 'invert', true);
     document.querySelector('#inv-screen').addEventListener('mousedown', e => {
       if (e.target.id === 'inv-screen') this.inv.toggle(false);
@@ -236,6 +263,43 @@ class Game {
       this.camera.fov = this.settings.fov;
       this.camera.updateProjectionMatrix();
     }
+    this.applyQualitySettings();
+  }
+
+  applyQualitySettings() {
+    const q = this.settings.quality;
+    const preset = q === 'auto' ? this.detectQuality() : QUALITY_PRESETS[q];
+    this._qualityPreset = preset;
+
+    // 更新粒子系统上限
+    if (this.fx) this.fx.setMaxParticles(preset.maxParticles);
+
+    // 更新像素比
+    if (this.renderer) {
+      this.renderer.setPixelRatio(Math.min(devicePixelRatio, preset.dpr));
+    }
+
+    // 更新世界材质（需要重新构建以应用/禁用摇摆着色器）
+    if (this.world && this.world.matOpaque) {
+      this.world.matOpaque = null;
+      this.world.matCutout = null;
+      this.world.matWater = null;
+      this.world.buildMaterials();
+    }
+  }
+
+  detectQuality() {
+    const touchCapable = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+    if (touchCapable) {
+      const dpr = window.devicePixelRatio || 1;
+      // 高DPR移动设备用中等，普通移动设备用低
+      if (dpr >= 3) return QUALITY_PRESETS.medium;
+      return QUALITY_PRESETS.low;
+    }
+
+    // 桌面设备默认高画质
+    return QUALITY_PRESETS.high;
   }
 
   showScreen(id) { document.getElementById(id).classList.remove('hidden'); }
@@ -244,7 +308,7 @@ class Game {
   closeSettings() { this.hideScreen('settings-screen'); }
 
   uiOpen() {
-    return (this.inv && this.inv.open) || (this.ship && this.ship.open) || this.state === 'pause' || this.state === 'dead';
+    return (this.inv && this.inv.open) || (this.ship && this.ship.open) || this.state === 'pause' || this.state === 'dead' || !!document.getElementById('trade-screen') || !!document.getElementById('sleep-overlay') || (this.hud && this.hud.minimapExpanded);
   }
 
   requestPointerLock() {
@@ -288,6 +352,7 @@ class Game {
       this.fx = new FX(this);
       this.fauna = new Fauna(this);
       this.npc = new Npc(this);
+      this.natives = new Native(this);
       this.inv = new Inventory(this);
       this.ship = new Ship(this);
       this.hud = new HUD(this);
@@ -351,6 +416,7 @@ class Game {
     }
     this.fauna.spawnPlanet(this.seed, this.palette);
     if (this.npc) this.npc.spawnPlanet(this.seed, this.palette);
+    if (this.natives) this.natives.spawnPlanet(this.seed, this.palette);
     this.hideScreen('loading-screen');
     this.hud.init();
     document.getElementById('hud-planet').textContent = this.planetName;
@@ -405,7 +471,7 @@ class Game {
       name: this.planetName,
       climate: pal.climate,
       flora: pal.floraLevel,
-      fauna: this.fauna.speciesList.length + ' 种' + (this.npc && this.npc.list.length ? ' · ' + this.npc.list.length + ' 名漂泊者' : ''),
+      fauna: this.fauna.speciesList.length + ' 种' + (this.npc && this.npc.list.length ? ' · ' + this.npc.list.length + ' 名漂泊者' : '') + (this.natives && this.natives.list.length ? ' · ' + this.natives.list.length + ' 名土著' : ''),
       storm: pal.stormLevel,
       res
     };
@@ -425,64 +491,93 @@ class Game {
     this.audio.startMusic('game');
     this.missions.updateCard();
     this.requestPointerLock();
+    // Only add pointerlockchange listener for mouse/keyboard mode
+    // (touch mode never uses pointer lock)
+    this._addPointerLockListener();
+  }
+
+  _addPointerLockListener() {
     if (!this.isTouch) {
-      document.addEventListener('pointerlockchange', () => {
+      this._onPLChange = () => {
         if (!document.pointerLockElement && this.state === 'play' && !this.uiOpen()) {
           this.togglePause(true);
         }
-      });
+      };
+      document.addEventListener('pointerlockchange', this._onPLChange);
     }
   }
 
   buildTouchButtons() {
-    const cont = document.getElementById('touch-btns');
-    if (cont.children.length) return;
-    const mk = (label, action, cls) => {
+    // 顶部工具条
+    const top = document.getElementById('touch-top');
+    if (top.children.length) return;
+    const tu = (label, action) => {
       const b = document.createElement('div');
-      b.className = 'tbtn' + (cls ? ' ' + cls : '');
+      b.className = 'tu-btn';
       b.textContent = label;
-      const onDown = (e) => { e.preventDefault(); e.stopPropagation(); this.touchAction = action; this._touchHold = true; this.doTouchAction(action, true); };
-      const onUp = (e) => { e.preventDefault(); e.stopPropagation(); this._touchHold = false; this.doTouchAction(action, false); };
-      b.addEventListener('touchstart', onDown, { passive: false });
-      b.addEventListener('touchend', onUp, { passive: false });
-      b.addEventListener('touchcancel', onUp, { passive: false });
-      cont.appendChild(b);
-      return b;
+      const down = (e) => { e.preventDefault(); e.stopPropagation(); this.doTouchAction(action, true); };
+      const up = (e) => { e.preventDefault(); e.stopPropagation(); this.doTouchAction(action, false); };
+      b.addEventListener('touchstart', down, { passive: false });
+      b.addEventListener('touchend', up, { passive: false });
+      b.addEventListener('touchcancel', up, { passive: false });
+      top.appendChild(b);
     };
-    mk('跳', 'jump');
-    mk('冲刺', 'sprint');
-    mk('挖', 'mine');
-    mk('放', 'place');
-    mk('E', 'interact');
-    mk('扫描', 'scan');
-    mk('目镜', 'visor');
-    mk('背包', 'inv');
-    mk('灯', 'light');
-    // 飞行触屏按钮
-    const fwrap = document.getElementById('flight-hud');
-    const fmk = (label, action, pos) => {
+    tu('📡', 'scan');
+    tu('🔍', 'visor');
+    tu('🎒', 'inv');
+    tu('💡', 'light');
+    tu('💊', 'replenish_ls');
+    tu('⚡', 'replenish_haz');
+
+    // 右侧弧形动作键 — 按拇指自然弧线排列，大的在下方（拇指最舒适区）
+    const arc = document.getElementById('touch-arc');
+    const ta = (label, action, size, row) => {
       const b = document.createElement('div');
-      b.className = 'ftbtn ftbtn-' + pos;
+      b.className = 'ta-btn ' + size;
       b.textContent = label;
-      const onDown = (e) => { e.preventDefault(); this._flightTouch = action; this.doFlightTouch(action, true); };
-      const onUp = (e) => { e.preventDefault(); this.doFlightTouch(action, false); };
-      b.addEventListener('touchstart', onDown, { passive: false });
-      b.addEventListener('touchend', onUp, { passive: false });
-      b.addEventListener('touchcancel', onUp, { passive: false });
-      fwrap.appendChild(b);
-      return b;
+      const down = (e) => { e.preventDefault(); e.stopPropagation(); this._touchHold = true; this.doTouchAction(action, true); };
+      const up = (e) => { e.preventDefault(); e.stopPropagation(); this._touchHold = false; this.doTouchAction(action, false); };
+      b.addEventListener('touchstart', down, { passive: false });
+      b.addEventListener('touchend', up, { passive: false });
+      b.addEventListener('touchcancel', up, { passive: false });
+      if (row) { const r = document.createElement('div'); r.className = 'ta-row'; r.appendChild(b); arc.appendChild(r); }
+      else arc.appendChild(b);
     };
-    fmk('油门+', 'throttleUp', 'up');
-    fmk('加力', 'boost', 'boost');
-    fmk('油门-', 'throttleDown', 'down');
-    fmk('降落', 'land', 'land');
-    fmk('跃迁', 'warp', 'warp');
+    // 上排：跳跃 + 冲刺（小键）
+    ta('跳', 'jump', 'ta-sm', true);
+    // 中排：冲刺 + 交互（小键）
+    ta('冲', 'sprint', 'ta-sm', true);
+    // 中间：放置（小键）
+    ta('放', 'place', 'ta-sm');
+    // 中间：交互 E（小键）
+    ta('E', 'interact', 'ta-sm');
+    // 下方大键：采集/攻击（拇指最舒适区）
+    ta('挖', 'mine', 'ta-lg');
+
+    // 飞行触屏按钮（默认隐藏，飞行时显示）
+    const fly = document.getElementById('touch-fly');
+    const tf = (label, action) => {
+      const b = document.createElement('div');
+      b.className = 'tf-btn';
+      b.textContent = label;
+      const down = (e) => { e.preventDefault(); this.doFlightTouch(action, true); };
+      const up = (e) => { e.preventDefault(); this.doFlightTouch(action, false); };
+      b.addEventListener('touchstart', down, { passive: false });
+      b.addEventListener('touchend', up, { passive: false });
+      b.addEventListener('touchcancel', up, { passive: false });
+      fly.appendChild(b);
+    };
+    tf('油门+', 'throttleUp');
+    tf('加力', 'boost');
+    tf('油门-', 'throttleDown');
+    tf('降落', 'land');
+    tf('跃迁', 'warp');
   }
 
   doTouchAction(action, down) {
     const p = this.player;
     if (action === 'jump') { this.input.keys['Space'] = down; }
-    else if (action === 'sprint') { this.input.keys['ShiftLeft'] = down; }
+    else if (action === 'sprint') { if (down) { this.input.keys['ShiftLeft'] = !this.input.keys['ShiftLeft']; } }
     else if (action === 'mine') { if (down && !p.inShip && !this.uiOpen()) { this.input.buttons[0] = true; } else this.input.buttons[0] = false; }
     else if (action === 'place') { if (down && !p.inShip && !this.uiOpen()) p.placeBlock(); }
     else if (action === 'interact') { this.input.keys['KeyE'] = down; }
@@ -490,6 +585,8 @@ class Game {
     else if (action === 'visor') { if (down) p.toggleVisor(); }
     else if (action === 'inv') { if (down) this.inv.toggle(); }
     else if (action === 'light') { if (down) { p.flashOn = !p.flashOn; p.flashlight.intensity = p.flashOn ? 1.4 : 0; this.audio.uiClick(); } }
+    else if (action === 'replenish_ls') { if (down) { this.input.keys['KeyZ'] = true; } else { this.input.keys['KeyZ'] = false; } }
+    else if (action === 'replenish_haz') { if (down) { this.input.keys['KeyX'] = true; } else { this.input.keys['KeyX'] = false; } }
   }
 
   doFlightTouch(action, down) {
@@ -527,6 +624,7 @@ class Game {
   onKey(code, e) {
     if (this.state === 'title') return;
     if (code === 'Escape') {
+      if (this.hud && this.hud.minimapExpanded) { this.hud.hideExpandedMap(); return; }
       if (this.inv && this.inv.open) return this.inv.toggle(false);
       if (this.ship && this.ship.open) { this.ship.closePanel(); this.requestPointerLock(); return; }
       if (!document.getElementById('settings-screen').classList.contains('hidden')) return this.closeSettings();
@@ -535,6 +633,12 @@ class Game {
       return;
     }
     if (this.state !== 'play') return;
+    // 小地图展开/关闭 (M键)
+    if (code === 'KeyM') {
+      if (this.hud.minimapExpanded) { this.hud.hideExpandedMap(); }
+      else { this.hud.showExpandedMap(); }
+      return;
+    }
     if (code === 'Tab') {
       e.preventDefault();
       if (!this.player.inShip) this.inv.toggle();
@@ -699,6 +803,21 @@ class Game {
       if (this.state === 'play') {
         this.playTime += dt;
         if (this.isTouch) this.input.updateJoyKeys();
+
+        // 睡觉快速过夜
+        if (this.player.sleeping) {
+          this.player.sleepTimer -= dt;
+          const progress = 1 - (this.player.sleepTimer / 10);
+          this.hud.updateSleepBar(progress);
+          // 快速推进天空时间：10秒走完一个夜晚
+          this.sky.t = (this.sky.t + dt * (CFG.DAY_LEN / 10)) % 1;
+          if (this.player.sleepTimer <= 0) {
+            this.player.sleeping = false;
+            this.hud.showSleepScreen(false);
+            this.hud.notify('睡醒了 —— 新的一天', 'success');
+          }
+        }
+
         const prevPos = this.player.pos.clone();
         this.player.update(dt);
         if (!this.player.inShip) {
@@ -709,6 +828,8 @@ class Game {
         else this.ship.update(dt);
         this.fauna.update(dt);
         if (this.npc) this.npc.update(dt);
+        if (this.natives) this.natives.update(dt);
+        this.updateCrops(dt);
         this.updateStorm(dt);
         this.milestones.tickTime(dt);
         this.missionT = (this.missionT || 0) - dt;
@@ -722,6 +843,26 @@ class Game {
       this.fx.update(dt);
       this.fx.applyShake(this.camera);
       this.renderer.render(this.scene, this.camera);
+    }
+  }
+
+  updateCrops(dt) {
+    if (!this.world || !this.sky) return;
+    const isDay = this.sky.dayMix >= 0.35;
+    if (!isDay) return; // 夜晚不生长
+    for (const [key, state] of this.world.cropStates) {
+      if (state.stage >= 2) continue; // 已成熟
+      state.timer += dt;
+      const growTime = state.cropType === 2 ? 80 : 60; // 高级作物生长更慢
+      if (state.timer >= growTime) {
+        state.timer = 0;
+        state.stage++;
+        // 更新方块类型
+        const parts = key.split(',');
+        const x = parseInt(parts[0]), y = parseInt(parts[1]), z = parseInt(parts[2]);
+        const newBlock = state.stage === 1 ? B.CROP_S2 : B.CROP_S3;
+        this.world.setBlock(x, y, z, newBlock);
+      }
     }
   }
 }
