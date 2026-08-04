@@ -583,13 +583,13 @@ class Game {
     };
     // 第一行：冲刺 + 跳跃（水平排列）
     const row1 = document.createElement('div'); row1.className = 'ta-row';
-    row1.appendChild(makeBtn('冲', 'sprint', 'ta-sm'));
-    row1.appendChild(makeBtn('跳', 'jump', 'ta-sm'));
+    row1.appendChild(makeBtn('冲', 'sprint', 'ta-md'));
+    row1.appendChild(makeBtn('跳', 'jump', 'ta-md'));
     arc.appendChild(row1);
     // 第二行：放置 + 交互（水平排列）
     const row2 = document.createElement('div'); row2.className = 'ta-row';
-    row2.appendChild(makeBtn('放', 'place', 'ta-sm'));
-    row2.appendChild(makeBtn('E', 'interact', 'ta-sm'));
+    row2.appendChild(makeBtn('放', 'place', 'ta-md'));
+    row2.appendChild(makeBtn('E', 'interact', 'ta-md'));
     arc.appendChild(row2);
     // 底部：采集摇杆（按住即挖掘，拖动控制瞄准点）
     const mineBase = document.createElement('div');

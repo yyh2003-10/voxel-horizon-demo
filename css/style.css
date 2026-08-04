@@ -10,7 +10,7 @@
   --line2:rgba(230,240,250,.14);
   --fh:'Orbitron','Rajdhani','Microsoft YaHei',sans-serif;
   --fb:'Rajdhani','Microsoft YaHei','PingFang SC',sans-serif;
-  --joy-size:clamp(110px,30vmin,160px);
+  --joy-size:clamp(120px,32vmin,150px);
 }
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#04070c}
@@ -353,7 +353,7 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
 #touch-layer:not(.hidden){display:block}
 #look-zone{position:absolute;right:0;top:0;width:55%;height:calc(100vh - 64px);height:calc(100dvh - 64px);pointer-events:auto;touch-action:none}
 #joy-zone{position:absolute;left:0;top:0;width:45%;height:calc(100vh - 64px);height:calc(100dvh - 64px);pointer-events:auto;touch-action:none}
-#joy-base{position:absolute;left:calc(24px + env(safe-area-inset-left));bottom:calc(96px + env(safe-area-inset-bottom));top:auto;width:var(--joy-size);height:var(--joy-size);border-radius:50%;border:2px solid rgba(255,255,255,.22);background:rgba(10,20,30,.35);pointer-events:none;z-index:51;backdrop-filter:blur(4px);transition:background .1s,border-color .1s}
+#joy-base{position:absolute;left:calc(24px + env(safe-area-inset-left));bottom:calc(110px + env(safe-area-inset-bottom));top:auto;width:var(--joy-size);height:var(--joy-size);border-radius:50%;border:2px solid rgba(255,255,255,.22);background:rgba(10,20,30,.35);pointer-events:none;z-index:51;backdrop-filter:blur(4px);transition:background .1s,border-color .1s}
 #joy-base.active{background:rgba(10,20,30,.6);border-color:rgba(255,255,255,.42);box-shadow:0 0 18px rgba(120,220,240,.25)}
 #joy-knob{position:absolute;left:50%;top:50%;width:calc(var(--joy-size)*0.42);height:calc(var(--joy-size)*0.42);margin-left:calc(var(--joy-size)*-0.21);margin-top:calc(var(--joy-size)*-0.21);border-radius:50%;background:rgba(255,255,255,.28);border:2px solid rgba(255,255,255,.45);box-shadow:0 0 14px rgba(120,220,240,.35);transition:transform .04s}
 /* top-right utility strip */
@@ -362,19 +362,20 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
 .tu-btn:active{background:rgba(102,217,232,.5);transform:scale(.9)}
 .tu-btn.fullscreen{font-size:14px;border-color:rgba(255,209,102,.45)}
 /* right-side action arc — spread horizontally for thumb reach */
-#touch-arc{position:absolute;right:calc(10px + env(safe-area-inset-right));bottom:calc(100px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:auto;z-index:52}
-#touch-arc .ta-row{flex-direction:row-reverse;gap:6px}
+#touch-arc{position:absolute;right:calc(12px + env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:auto;z-index:52}
+#touch-arc .ta-row{flex-direction:row-reverse;gap:8px}
 .ta-btn{display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(10,20,30,.55);border:1.5px solid rgba(255,255,255,.28);font-weight:600;color:var(--ink);touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(6px);transition:background .08s,transform .08s}
 .ta-btn:active{background:rgba(255,138,92,.55);transform:scale(.88);border-color:var(--acc)}
-.ta-lg{width:clamp(62px,16vmin,78px);height:clamp(62px,16vmin,78px);font-size:15px}
+.ta-lg{width:clamp(68px,15vmin,84px);height:clamp(68px,15vmin,84px);font-size:16px}
+.ta-md{width:clamp(58px,13vmin,72px);height:clamp(58px,13vmin,72px);font-size:14px}
 .ta-sm{width:clamp(48px,12vmin,60px);height:clamp(48px,12vmin,60px);font-size:12px}
 .ta-row{display:flex;flex-direction:row-reverse;gap:6px;justify-content:flex-end}
 /* mine joystick */
 .ta-joy{position:relative;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(10,20,30,.55);border:1.5px solid rgba(255,255,255,.28);touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(6px);transition:background .08s,border-color .08s}
 .ta-joy.active{background:rgba(255,138,92,.55);border-color:var(--acc)}
-.ta-joy-knob{position:absolute;left:50%;top:50%;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.38);border:2px solid rgba(255,255,255,.55);transform:translate(-50%,-50%);transition:transform .04s;box-shadow:0 0 10px rgba(255,138,92,.35)}
-.ta-joy.ta-lg{width:clamp(90px,22vmin,120px);height:clamp(90px,22vmin,120px)}
-#mine-joy-wrap{position:absolute;left:72%;top:50%;transform:translate(-50%,-50%);z-index:52;pointer-events:auto}
+.ta-joy-knob{position:absolute;left:50%;top:50%;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.38);border:2px solid rgba(255,255,255,.55);transform:translate(-50%,-50%);transition:transform .04s;box-shadow:0 0 10px rgba(255,138,92,.35)}
+.ta-joy.ta-lg{width:clamp(110px,26vmin,150px);height:clamp(110px,26vmin,150px)}
+#mine-joy-wrap{position:absolute;left:76%;top:56%;transform:translate(-50%,-50%);z-index:52;pointer-events:auto}
 /* flight touch */
 #touch-fly{position:absolute;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);display:none;gap:12px;pointer-events:auto;z-index:52}
 .tf-btn{display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:12px;background:rgba(10,20,30,.6);border:1.5px solid rgba(120,220,240,.35);font-size:12px;font-weight:600;color:var(--ink);backdrop-filter:blur(6px);touch-action:none;transition:background .08s,transform .08s}
@@ -418,10 +419,12 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   .hb-slot .key{font-size:8px}
 
   /* right-side action buttons — bottom-right */
-  .ta-lg{width:58px;height:58px;font-size:14px}
+  .ta-lg{width:64px;height:64px;font-size:15px}
+  .ta-md{width:56px;height:56px;font-size:13px}
   .ta-sm{width:44px;height:44px;font-size:11px}
-  .ta-joy.ta-lg{width:84px;height:84px}
-  .ta-joy-knob{width:24px;height:24px}
+  .ta-joy.ta-lg{width:100px;height:100px}
+  .ta-joy-knob{width:26px;height:26px}
+  #mine-joy-wrap{left:74%;top:58%}
   .tf-btn{width:48px;height:48px;font-size:11px}
 
   /* utility buttons — 2-col grid on right side, below notify */
@@ -485,7 +488,7 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   .notice{font-size:10px;padding:4px 10px 4px 12px;max-width:28vw}
 
   /* bottom-left: joystick + mission card above it */
-  #joy-base{--joy-size:86px;left:calc(10px + env(safe-area-inset-left));bottom:calc(4px + env(safe-area-inset-bottom))}
+  #joy-base{--joy-size:120px;left:calc(14px + env(safe-area-inset-left));bottom:calc(20vh + env(safe-area-inset-bottom))}
   #joy-zone{height:100%}
   #mission-card{
     top:auto;
@@ -518,20 +521,20 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   /* bottom-right: action buttons stacked horizontally */
   #touch-arc{
     position:absolute;
-    right:calc(4px + env(safe-area-inset-right));
-    bottom:calc(4px + env(safe-area-inset-bottom));
+    right:calc(8px + env(safe-area-inset-right));
+    bottom:calc(8px + env(safe-area-inset-bottom));
     top:auto;
     left:auto;
     display:flex;
     flex-direction:row;
     align-items:flex-end;
-    gap:4px;
+    gap:6px;
   }
-  #touch-arc .ta-row{display:flex;flex-direction:column;gap:4px}
-  .ta-lg,.ta-sm{width:46px;height:46px;font-size:12px}
-  .ta-joy.ta-lg{width:72px;height:72px}
-  .ta-joy-knob{width:20px;height:20px}
-  #mine-joy-wrap{left:70%}
+  #touch-arc .ta-row{display:flex;flex-direction:column;gap:6px}
+  .ta-lg,.ta-md,.ta-sm{width:52px;height:52px;font-size:13px}
+  .ta-joy.ta-lg{width:90px;height:90px}
+  .ta-joy-knob{width:22px;height:22px}
+  #mine-joy-wrap{left:78%;top:56%}
 
   #alert-center{top:34px;font-size:10px;padding:3px 10px}
   #interact-hint{top:calc(50% + 10px);font-size:10px;padding:4px 10px}
@@ -541,27 +544,33 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   /* extra-small phones: tighter spacing */
   .tu-btn{width:28px;height:28px;font-size:9px}
   #touch-top{gap:4px;width:64px}
-  .ta-lg{width:54px;height:54px;font-size:13px}
+  .ta-lg{width:58px;height:58px;font-size:14px}
+  .ta-md{width:50px;height:50px;font-size:12px}
   .ta-sm{width:40px;height:40px;font-size:10px}
-  .ta-joy.ta-lg{width:78px;height:78px}
+  .ta-joy.ta-lg{width:84px;height:84px}
   .ta-joy-knob{width:22px;height:22px}
+  #mine-joy-wrap{left:74%;top:56%}
   .hb-slot{width:36px;height:36px}
   .hb-slot img{width:30px;height:30px}
   #mission-card{min-width:110px;padding:4px 8px}
   #alert-center{font-size:11px;padding:4px 10px}
   #minimap{width:64px;height:64px}
   #minimap-label{font-size:8px}
-  #joy-base{--joy-size:100px}
+  #joy-base{--joy-size:110px}
   #hud-corner{top:78px;left:4px}
   #hud-units{font-size:12px}
 }
 /* tablet landscape — larger touch targets, wider panels */
 @media (min-width:768px) and (max-width:1024px) and (orientation:landscape){
   .tu-btn{width:44px;height:44px;font-size:12px}
-  .ta-lg{width:72px;height:72px;font-size:16px}
+  .ta-lg{width:76px;height:76px;font-size:17px}
+  .ta-md{width:66px;height:66px;font-size:15px}
   .ta-sm{width:56px;height:56px;font-size:13px}
+  .ta-joy.ta-lg{width:130px;height:130px}
+  .ta-joy-knob{width:30px;height:30px}
+  #mine-joy-wrap{left:76%;top:54%}
   .tf-btn{width:56px;height:56px;font-size:13px}
-  #joy-base{--joy-size:clamp(120px,26vmin,170px)}
+  #joy-base{--joy-size:clamp(130px,28vmin,180px)}
   #hotbar{bottom:14px;gap:6px}
   .hb-slot{width:48px;height:48px}
   .hb-slot img{width:40px;height:40px}
