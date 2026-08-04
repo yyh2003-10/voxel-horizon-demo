@@ -109,8 +109,8 @@ const Input = {
           const mdy = t.clientY - this.lookLastY;
           this.lookLastX = t.clientX;
           this.lookLastY = t.clientY;
-          this.dx += mdx * 1.4;
-          this.dy += mdy * 1.4;
+          this.dx += mdx * 2.2;
+          this.dy += mdy * 2.2;
           this.dxSmooth = U.lerp(this.dxSmooth, mdx, 0.2);
         }
       }

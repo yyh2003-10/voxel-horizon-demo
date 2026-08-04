@@ -43,6 +43,8 @@ class HUD {
     if (minimapBig) {
       minimapBig.addEventListener('click', (e) => this.onExpandedMapClick(e));
     }
+    // 通知收起/展开
+    this.initNotifyToggle();
   }
 
   update(dt) {
@@ -210,13 +212,49 @@ class HUD {
     const kickers = { info: '信息 // INFO', success: '完成 // DONE', warn: '注意 // CAUTION', danger: '警报 // ALERT' };
     el.innerHTML = `<span class="n-kicker">${kickers[kind] || kickers.info}</span>${text}`;
     const stack = document.getElementById('notify-stack');
+    const toggle = document.getElementById('notify-toggle');
     stack.appendChild(el);
-    while (stack.children.length > 5) stack.firstChild.remove();
+    // Keep only real notices (exclude toggle), max 5
+    const notices = stack.querySelectorAll('.notice:not(.notify-toggle-wrap)');
+    while (notices.length > 5) { notices[0].remove(); notices = Array.from(notices).slice(1); }
     g.audio.notify(kind);
+    // Update unread count
+    this._notifyUnread = (this._notifyUnread || 0) + 1;
+    this._updateNotifyCount();
     setTimeout(() => {
       el.classList.add('fade');
-      setTimeout(() => el.remove(), 450);
+      setTimeout(() => { el.remove(); this._updateNotifyCount(); }, 450);
     }, 5200);
+  }
+
+  _updateNotifyCount() {
+    const stack = document.getElementById('notify-stack');
+    if (!stack) return;
+    const count = stack.querySelectorAll('.notice:not(.notify-toggle-wrap):not(.fade)').length;
+    const countEl = document.getElementById('notify-count');
+    if (countEl) countEl.textContent = count;
+    const icon = stack.querySelector('.nt-icon');
+    if (icon) icon.textContent = stack.classList.contains('collapsed') ? '▶' : '▼';
+  }
+
+  initNotifyToggle() {
+    const stack = document.getElementById('notify-stack');
+    const toggle = document.getElementById('notify-toggle');
+    if (!stack || !toggle) return;
+    // Default collapsed
+    stack.classList.add('collapsed');
+    const onClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const collapsed = stack.classList.toggle('collapsed');
+      if (!collapsed) {
+        // Expanding — reset unread counter
+        this._notifyUnread = 0;
+      }
+      this._updateNotifyCount();
+    };
+    toggle.addEventListener('click', onClick);
+    toggle.addEventListener('touchstart', onClick, { passive: false });
   }
 
   alert(text, on) {

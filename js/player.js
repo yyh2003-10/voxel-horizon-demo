@@ -208,6 +208,7 @@ class Player {
     const p = this.pos;
     this.vel.y = Math.max(this.vel.y, -46);
     const collide = () => world.collides(p.x - w, p.y, p.z - w, p.x + w, p.y + h - 0.001, p.z + w);
+    let wantAutoJump = false;
     const move = (axis, amt) => {
       if (Math.abs(amt) < 1e-8) return;
       const dirS = Math.sign(amt);
@@ -228,6 +229,13 @@ class Player {
             continue;
           }
           p.y = oy;
+          // Step-up failed — check if a full jump (1.2 blocks) clears it
+          if (this.onGround && !this.inWater) {
+            p.y += 1.25;
+            const clears = !collide();
+            p.y = oy;
+            if (clears) wantAutoJump = true;
+          }
         }
         let guard = 0;
         while (collide() && guard++ < 40) p[axis] -= 0.02 * dirS;
@@ -238,6 +246,12 @@ class Player {
     };
     move('x', this.vel.x * dt);
     move('z', this.vel.z * dt);
+    // Auto-jump: if player hit a 1-block obstacle while moving on ground
+    if (wantAutoJump && this.onGround && this.vel.y <= 0.01) {
+      this.vel.y = 8.0;
+      this.onGround = false;
+      this.g.audio.jump();
+    }
     const wasGround = this.onGround;
     move('y', this.vel.y * dt);
     this.onGround = this.vel.y <= 0.01 && world.collides(p.x - w, p.y - 0.08, p.z - w, p.x + w, p.y - 0.02, p.z + w);
