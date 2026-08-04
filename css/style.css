@@ -414,8 +414,8 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   .ta-sm{width:44px;height:44px;font-size:11px}
   .tf-btn{width:48px;height:48px;font-size:11px}
 
-  /* utility buttons — vertical 2-col grid on right side, below notify */
-  #touch-top{left:auto;right:calc(6px + env(safe-area-inset-right));top:auto;transform:none;flex-direction:row;flex-wrap:wrap-reverse;justify-content:flex-end;gap:4px;width:74px;top:calc(34px + env(safe-area-inset-top))}
+  /* utility buttons — 2-col grid on right side, below notify */
+  #touch-top{left:auto;right:calc(6px + env(safe-area-inset-right));top:calc(34px + env(safe-area-inset-top));transform:none;flex-direction:row;flex-wrap:wrap;justify-content:flex-end;gap:4px;width:74px}
   .tu-btn{width:34px;height:34px;font-size:11px}
 
   /* notifications — top-right, collapsed by default */
