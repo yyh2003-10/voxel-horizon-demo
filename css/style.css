@@ -379,23 +379,23 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #flight-tips{display:none}
   #interact-hint .kbd{display:none}
   #stats-left,#stats-right{display:none}
-  #compass-wrap{max-width:50vw;overflow:hidden}
+  #compass-wrap{max-width:44vw;overflow:hidden;margin-top:4px}
 
-  /* top utility buttons — centered, away from planet info */
-  #touch-top{left:50%;right:auto;transform:translateX(-30%);top:6px;gap:8px}
-  .tu-btn{width:34px;height:34px;font-size:11px}
+  /* minimap — top-left */
+  #minimap-wrap{top:6px;left:6px}
+  #minimap{width:80px;height:80px}
 
-  /* planet info — below utility buttons, smaller */
-  #hud-corner{top:72px;right:10px}
-  #hud-units{font-size:14px}
+  /* planet info — below minimap, left side (avoid right-side clutter) */
+  #hud-corner{top:auto;bottom:auto;right:auto;left:6px;top:94px;text-align:left}
+  #hud-units{font-size:13px;letter-spacing:1px}
   #hud-planet{font-size:9px;letter-spacing:2px}
   #hud-env{font-size:9px}
 
-  /* alert banner — compact */
-  #alert-center{top:56px;font-size:12px;letter-spacing:2px;padding:5px 14px}
+  /* alert banner — compact, centered */
+  #alert-center{top:52px;font-size:11px;letter-spacing:2px;padding:4px 12px}
   #alert-center .alert-icon{margin-right:5px}
 
-  /* mission card — above hotbar, collapsible */
+  /* mission card — bottom-left, collapsible */
   #mission-card{width:auto;min-width:120px;max-width:200px;bottom:calc(44px + env(safe-area-inset-bottom));top:auto;right:auto;left:10px;font-size:10px;padding:6px 10px;cursor:pointer;transition:max-height .2s ease;max-height:120px;overflow:hidden}
   #mission-card.collapsed{max-height:22px}
   #mission-card.collapsed #mission-desc,#mission-card.collapsed #mission-prog-wrap{display:none}
@@ -404,19 +404,23 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #mission-title{font-size:11px;font-weight:700}
   #mission-desc{font-size:9px;margin-top:2px;line-height:1.3}
 
-  /* hotbar — touch-friendly */
+  /* hotbar — bottom-center */
   #hotbar{bottom:6px;gap:3px}
   .hb-slot{width:32px;height:32px}
   .hb-slot img{width:26px;height:26px;inset:3px}
 
-  /* right-side action buttons */
+  /* right-side action buttons — bottom-right */
   .ta-lg{width:58px;height:58px;font-size:14px}
   .ta-sm{width:44px;height:44px;font-size:11px}
   .tf-btn{width:48px;height:48px;font-size:11px}
 
-  /* notifications */
-  #notify-stack{bottom:auto;top:52px;right:8px;max-width:55vw}
-  .notice{font-size:12px;padding:6px 12px 6px 14px;max-width:55vw}
+  /* utility buttons — vertical 2-col grid on right side, below notify */
+  #touch-top{left:auto;right:calc(6px + env(safe-area-inset-right));top:auto;transform:none;flex-direction:row;flex-wrap:wrap-reverse;justify-content:flex-end;gap:4px;width:74px;top:calc(34px + env(safe-area-inset-top))}
+  .tu-btn{width:34px;height:34px;font-size:11px}
+
+  /* notifications — top-right, collapsed by default */
+  #notify-stack{bottom:auto;top:calc(4px + env(safe-area-inset-top));right:6px;max-width:50vw}
+  .notice{font-size:12px;padding:6px 12px 6px 14px;max-width:50vw}
   #toasts{bottom:60px}
   .toast{font-size:12px;padding:3px 10px}
 
@@ -427,15 +431,11 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #visor-info{min-width:160px;font-size:12px;left:calc(50% + 40px)}
   #visor-side{font-size:10px;left:6vw}
   .visor-corner{width:40px;height:40px}
-
-  /* minimap */
-  #minimap-wrap{top:6px;left:6px}
-  #minimap{width:80px;height:80px}
 }
 @media (max-width:600px){
   /* extra-small phones: tighter spacing */
-  .tu-btn{width:30px;height:30px;font-size:10px}
-  #touch-top{gap:5px}
+  .tu-btn{width:28px;height:28px;font-size:9px}
+  #touch-top{gap:4px;width:64px}
   .ta-lg{width:54px;height:54px;font-size:13px}
   .ta-sm{width:40px;height:40px;font-size:10px}
   .hb-slot{width:28px;height:28px}
@@ -443,9 +443,10 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #mission-card{min-width:110px;padding:4px 8px}
   #alert-center{font-size:11px;padding:4px 10px}
   #minimap{width:64px;height:64px}
-  #minimap{width:64px;height:64px}
   #minimap-label{font-size:8px}
   #joy-base{--joy-size:100px}
+  #hud-corner{top:78px;left:4px}
+  #hud-units{font-size:12px}
 }
 /* tablet landscape — larger touch targets, wider panels */
 @media (min-width:768px) and (max-width:1024px) and (orientation:landscape){
@@ -506,15 +507,17 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #minimap-big{max-width:90vw;max-height:70dvh}
   #visor-info{left:50%;top:auto;bottom:92px;transform:translateX(-50%);width:min(86vw,300px);min-width:0}
   #visor-side{display:none}
-  #alert-center{top:56px;width:88vw;padding:5px 12px;text-align:center;font-size:12px}
+  #alert-center{top:50px;width:88vw;padding:4px 12px;text-align:center;font-size:11px}
   #milestone-pop .ms-line{width:80vw}
   #milestone-pop .ms-title{font-size:30px}
-  #touch-top{top:calc(6px + env(safe-area-inset-top))}
+  #touch-top{top:calc(30px + env(safe-area-inset-top));width:68px}
+  .tu-btn{width:30px;height:30px;font-size:10px}
   #hotbar{bottom:calc(8px + env(safe-area-inset-bottom))}
   #toasts{bottom:calc(68px + env(safe-area-inset-bottom))}
   #stats-left{bottom:calc(24px + env(safe-area-inset-bottom))}
   #stats-right{bottom:calc(24px + env(safe-area-inset-bottom))}
-  #notify-stack{top:calc(60px + env(safe-area-inset-top))}
+  #notify-stack{top:calc(4px + env(safe-area-inset-top))}
   #crosshair{top:calc(50% - 40px)}
   #interact-hint{top:calc(50% + 40px)}
+  #hud-corner{top:88px;left:6px}
 }
