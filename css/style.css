@@ -85,8 +85,8 @@ body{font-family:var(--fb);color:var(--ink);font-size:16px}
 #hold-ring .ring-fg{stroke:#fff;stroke-dasharray:113;stroke-dashoffset:113}
 
 /* ---------- minimap ---------- */
-#minimap-wrap{position:absolute;top:8px;left:8px;z-index:25;cursor:pointer}
-#minimap{width:120px;height:120px;border:2px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(0,0,0,.5);image-rendering:pixelated;transition:border-color .15s}
+#minimap-wrap{position:absolute;top:8px;left:8px;z-index:55;cursor:pointer;pointer-events:auto}
+#minimap{width:120px;height:120px;border:2px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(0,0,0,.5);image-rendering:pixelated;transition:border-color .15s;pointer-events:none}
 #minimap-wrap:hover #minimap{border-color:var(--acc2);box-shadow:0 0 12px rgba(102,217,232,.4)}
 #minimap-label{font-family:var(--fh);font-size:9px;letter-spacing:2px;text-align:center;color:rgba(255,255,255,.45);margin-top:2px}
 #minimap-expanded{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
@@ -381,9 +381,9 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #stats-left,#stats-right{display:none}
   #compass-wrap{max-width:44vw;overflow:hidden;margin-top:4px}
 
-  /* minimap — top-left */
-  #minimap-wrap{top:6px;left:6px}
-  #minimap{width:80px;height:80px}
+  /* minimap — top-left, clickable above touch-layer */
+  #minimap-wrap{top:6px;left:6px;z-index:55;pointer-events:auto}
+  #minimap{width:80px;height:80px;pointer-events:none}
 
   /* planet info — below minimap, left side (avoid right-side clutter) */
   #hud-corner{top:auto;bottom:auto;right:auto;left:6px;top:94px;text-align:left}
@@ -434,32 +434,97 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #visor-side{font-size:10px;left:6vw}
   .visor-corner{width:40px;height:40px}
 }
-/* mobile landscape — keep top area clear, move mission card to bottom-left */
-@media (max-width:768px) and (orientation:landscape){
-  #mission-card{top:auto;bottom:calc(42px + env(safe-area-inset-bottom));left:6px;min-width:100px;max-width:160px;padding:4px 8px;font-size:9px;max-height:80px}
+/* mobile landscape — wide but short, push HUD to four corners */
+@media (orientation:landscape) and (max-height:600px){
+  /* top-left: minimap + compass, clickable above touch-layer */
+  #minimap-wrap{top:4px;left:4px;z-index:55;pointer-events:auto}
+  #minimap{width:64px;height:64px;border-width:1px;border-radius:6px;pointer-events:none}
+  #minimap-label{display:none}
+  #compass-wrap{position:absolute;top:4px;left:74px;right:auto;margin:0;max-width:28vw;height:40px}
+  #compass-wrap::after{height:8px}
+
+  /* hide planet info to save vertical space */
+  #hud-corner{display:none}
+
+  /* top-right: utility buttons in a 4x2 grid */
+  #touch-top{
+    position:absolute;
+    top:calc(4px + env(safe-area-inset-top));
+    right:calc(4px + env(safe-area-inset-right));
+    left:auto;
+    width:auto;
+    display:grid;
+    grid-template-columns:repeat(4,34px);
+    grid-template-rows:repeat(2,34px);
+    gap:3px;
+    transform:none;
+    flex-direction:unset;
+    flex-wrap:unset;
+    justify-content:unset;
+  }
+  .tu-btn{width:34px;height:34px;font-size:10px}
+
+  /* notifications: top-right but left of utility grid, default collapsed */
+  #notify-stack{
+    top:calc(4px + env(safe-area-inset-top));
+    right:calc(146px + env(safe-area-inset-right));
+    bottom:auto;
+    left:auto;
+    max-width:28vw;
+    align-items:flex-end;
+  }
+  #notify-toggle{padding:3px 8px;font-size:10px}
+  .notice{font-size:10px;padding:4px 10px 4px 12px;max-width:28vw}
+
+  /* bottom-left: joystick + mission card above it */
+  #joy-base{--joy-size:86px;left:calc(10px + env(safe-area-inset-left));bottom:calc(4px + env(safe-area-inset-bottom))}
+  #joy-zone{height:100%}
+  #mission-card{
+    top:auto;
+    right:auto;
+    bottom:calc(96px + env(safe-area-inset-bottom));
+    left:calc(6px + env(safe-area-inset-left));
+    min-width:90px;
+    max-width:140px;
+    max-height:70px;
+    padding:4px 8px;
+    font-size:9px;
+  }
   #mission-card.collapsed{max-height:18px}
-  #mission-kind{font-size:7px;letter-spacing:1px}
   #mission-title{font-size:10px}
   #mission-desc{font-size:8px}
-  #hud-corner{top:auto;bottom:calc(42px + env(safe-area-inset-bottom));left:auto;right:6px;text-align:right}
-  #hud-units{font-size:11px}
-  #hud-planet{font-size:8px;letter-spacing:1px}
-  #hud-env{font-size:8px}
-  #compass-wrap{max-width:30vw}
-  #touch-top{top:calc(4px + env(safe-area-inset-top))}
-  #notify-stack{top:calc(4px + env(safe-area-inset-top))}
-  #minimap{width:64px;height:64px}
-  #alert-center{top:34px;font-size:10px;padding:3px 8px}
-  .ta-lg{width:50px;height:50px;font-size:12px}
-  .ta-sm{width:38px;height:38px;font-size:10px}
-  .tf-btn{width:42px;height:42px;font-size:10px}
-  #hotbar{bottom:2px;gap:2px}
-  .hb-slot{width:24px;height:24px}
-  .hb-slot img{width:20px;height:20px;inset:2px}
+
+  /* bottom-center/left: tight hotbar */
+  #hotbar{
+    left:calc(104px + env(safe-area-inset-left));
+    bottom:calc(6px + env(safe-area-inset-bottom));
+    transform:none;
+    gap:2px;
+  }
+  .hb-slot{width:22px;height:22px}
+  .hb-slot img{width:18px;height:18px;inset:2px}
   .hb-slot .cnt{font-size:7px}
   .hb-slot .key{font-size:5px}
-  #joy-base{--joy-size:90px}
-  #interact-hint{font-size:10px;padding:4px 10px;top:calc(50% + 10px)}
+  .hb-slot.sel{transform:translateY(-2px)}
+
+  /* bottom-right: action buttons stacked horizontally */
+  #touch-arc{
+    position:absolute;
+    right:calc(4px + env(safe-area-inset-right));
+    bottom:calc(4px + env(safe-area-inset-bottom));
+    top:auto;
+    left:auto;
+    display:flex;
+    flex-direction:row;
+    align-items:flex-end;
+    gap:4px;
+  }
+  #touch-arc .ta-row{display:flex;flex-direction:column;gap:4px}
+  .ta-lg,.ta-sm{width:46px;height:46px;font-size:12px}
+
+  #alert-center{top:34px;font-size:10px;padding:3px 10px}
+  #interact-hint{top:calc(50% + 10px);font-size:10px;padding:4px 10px}
+  #visor-info{min-width:140px;font-size:11px}
 }
 @media (max-width:600px){
   /* extra-small phones: tighter spacing */
