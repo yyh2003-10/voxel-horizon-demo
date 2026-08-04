@@ -434,6 +434,33 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #visor-side{font-size:10px;left:6vw}
   .visor-corner{width:40px;height:40px}
 }
+/* mobile landscape — keep top area clear, move mission card to bottom-left */
+@media (max-width:768px) and (orientation:landscape){
+  #mission-card{top:auto;bottom:calc(42px + env(safe-area-inset-bottom));left:6px;min-width:100px;max-width:160px;padding:4px 8px;font-size:9px;max-height:80px}
+  #mission-card.collapsed{max-height:18px}
+  #mission-kind{font-size:7px;letter-spacing:1px}
+  #mission-title{font-size:10px}
+  #mission-desc{font-size:8px}
+  #hud-corner{top:auto;bottom:calc(42px + env(safe-area-inset-bottom));left:auto;right:6px;text-align:right}
+  #hud-units{font-size:11px}
+  #hud-planet{font-size:8px;letter-spacing:1px}
+  #hud-env{font-size:8px}
+  #compass-wrap{max-width:30vw}
+  #touch-top{top:calc(4px + env(safe-area-inset-top))}
+  #notify-stack{top:calc(4px + env(safe-area-inset-top))}
+  #minimap{width:64px;height:64px}
+  #alert-center{top:34px;font-size:10px;padding:3px 8px}
+  .ta-lg{width:50px;height:50px;font-size:12px}
+  .ta-sm{width:38px;height:38px;font-size:10px}
+  .tf-btn{width:42px;height:42px;font-size:10px}
+  #hotbar{bottom:2px;gap:2px}
+  .hb-slot{width:24px;height:24px}
+  .hb-slot img{width:20px;height:20px;inset:2px}
+  .hb-slot .cnt{font-size:7px}
+  .hb-slot .key{font-size:5px}
+  #joy-base{--joy-size:90px}
+  #interact-hint{font-size:10px;padding:4px 10px;top:calc(50% + 10px)}
+}
 @media (max-width:600px){
   /* extra-small phones: tighter spacing */
   .tu-btn{width:28px;height:28px;font-size:9px}
