@@ -106,8 +106,8 @@ body{font-family:var(--fb);color:var(--ink);font-size:16px}
 .hp-seg.hurt{background:var(--danger)}
 
 /* ---------- hotbar ---------- */
-#hotbar{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:5px;pointer-events:none}
-.hb-slot{position:relative;width:28px;height:28px;background:rgba(8,14,22,.72);border:1px solid var(--line2);backdrop-filter:blur(6px);clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);transition:transform .1s,border-color .1s}
+#hotbar{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:5px;pointer-events:none;z-index:60}
+.hb-slot{position:relative;width:28px;height:28px;pointer-events:auto;background:rgba(8,14,22,.72);border:1px solid var(--line2);backdrop-filter:blur(6px);clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);transition:transform .1s,border-color .1s;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent}
 .hb-slot img{position:absolute;inset:2px;width:24px;height:24px;image-rendering:pixelated}
 .hb-slot .cnt{position:absolute;right:3px;bottom:1px;font-family:var(--fh);font-size:9px;color:#fff;text-shadow:0 1px 2px #000}
 .hb-slot .key{position:absolute;left:3px;top:1px;font-size:7px;opacity:.5;font-family:var(--fh)}
@@ -404,10 +404,10 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #mission-title{font-size:11px;font-weight:700}
   #mission-desc{font-size:9px;margin-top:2px;line-height:1.3}
 
-  /* hotbar — smaller */
-  #hotbar{bottom:6px;pointer-events:auto;gap:3px}
-  .hb-slot{width:26px;height:26px;pointer-events:auto;cursor:pointer}
-  .hb-slot img{width:20px;height:20px;inset:2px}
+  /* hotbar — touch-friendly */
+  #hotbar{bottom:6px;gap:3px}
+  .hb-slot{width:32px;height:32px}
+  .hb-slot img{width:26px;height:26px;inset:3px}
 
   /* right-side action buttons */
   .ta-lg{width:58px;height:58px;font-size:14px}
@@ -438,8 +438,8 @@ h1 span{color:var(--acc);text-shadow:0 0 40px rgba(255,150,100,.5)}
   #touch-top{gap:5px}
   .ta-lg{width:54px;height:54px;font-size:13px}
   .ta-sm{width:40px;height:40px;font-size:10px}
-  .hb-slot{width:24px;height:24px}
-  .hb-slot img{width:18px;height:18px}
+  .hb-slot{width:28px;height:28px}
+  .hb-slot img{width:22px;height:22px}
   #mission-card{min-width:110px;padding:4px 8px}
   #alert-center{font-size:11px;padding:4px 10px}
   #minimap{width:64px;height:64px}
